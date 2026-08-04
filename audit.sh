@@ -109,19 +109,33 @@ scan_tracked "email address" \
 # ---------------------------------------------------------------
 head_ "4. detect-secrets baseline scan"
 # ---------------------------------------------------------------
-if command -v detect-secrets >/dev/null 2>&1; then
+# Use detect-secrets-hook, NOT `detect-secrets scan --baseline`.
+#
+# `scan --baseline FILE` is not a check. Verified experimentally: it exits 0
+# even when it finds a secret that is not in the baseline, and it REWRITES
+# FILE in place, silently adding that secret to the baseline. Running this
+# audit would have laundered a real secret into the baseline and reported
+# "nothing new" on every run thereafter.
+#
+# detect-secrets-hook is the pre-commit entry point: exit 1 on anything not
+# already in the baseline, exit 0 when clean, and it never writes the file.
+if command -v detect-secrets-hook >/dev/null 2>&1; then
   if [ -f .secrets.baseline ]; then
-    if detect-secrets scan --baseline .secrets.baseline >/dev/null 2>&1; then
+    if [ -z "$(git ls-files)" ]; then
+      warn "no tracked files — detect-secrets has nothing to scan"
+    elif DS_OUT=$(git ls-files -z \
+           | xargs -0 detect-secrets-hook --baseline .secrets.baseline 2>&1); then
       ok "detect-secrets found nothing new"
     else
       fail "detect-secrets found something not in the baseline"
+      echo "$DS_OUT" | head -n 20 | sed 's/^/          /'
       echo "        Review with: detect-secrets audit .secrets.baseline"
     fi
   else
     warn ".secrets.baseline missing — create it: detect-secrets scan > .secrets.baseline"
   fi
 else
-  warn "detect-secrets not on PATH — is the venv active?"
+  warn "detect-secrets-hook not on PATH — is the venv active?"
 fi
 
 # ---------------------------------------------------------------
