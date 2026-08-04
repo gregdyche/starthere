@@ -52,6 +52,23 @@ it opens in your browser. That is the whole thing.
 Set it as your browser homepage or pin the tab, so opening it is not a decision you
 have to make each morning.
 
+### The Desktop icon is a symlink, not a copy
+
+```bash
+ln -s ~/repos/starthere/STARTHERE.html ~/Desktop/STARTHERE.html
+```
+
+That distinction is the whole point. Double-clicking the icon opens the real file
+inside the repo — so an edit you make at 6am lands in the repo and shows up in
+`git status`, where the pre-commit hooks will see it. A copy on the Desktop would
+drift from the tracked version inside a week, and you would not find out until the
+two disagreed about something that mattered.
+
+The browser resolves the link before it does anything else, so the address bar
+shows the repo path either way. Your saved data is therefore shared between the
+Desktop icon and opening the repo file directly — the symlink does not create a
+third drawer. Which matters for the next section.
+
 ### The one wrinkle: two ways to open the same file
 
 When you double-click the file, your browser loads it from an address starting with
