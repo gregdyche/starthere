@@ -5,16 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>START HERE</title>
 <style>
+  /* =========================================================
+     REMOVE BEFORE FLIGHT — Creighton edition
+     Striped tag while checks remain; calms to a solid banner
+     and the motto when the preflight is cleared. Blue + gold
+     throughout: attention is gold, calm is blue.
+     ========================================================= */
   :root {
-    --flag-red: #00447c;        /* Creighton blue */
-    --flag-red-dark: #002f5f;   /* deep navy */
-    --gold: #f2c75c;            /* Creighton gold accent */
-    --ink: #1a1a1a;
-    --paper: #eef1f5;
+    --blue: #00447c;            /* Creighton blue */
+    --navy: #002f5f;
+    --gold: #f2c75c;            /* Creighton gold: the attention color */
+    --gold-deep: #d9a832;
+    --ink: #1b1b1b;
+    --paper: #f3f0e8;
     --card: #ffffff;
-    --muted: #6b6b6b;
-    --line: #d9e0ea;
+    --muted: #6e6a63;
+    --line: #e1dcd1;
     --good: #1f7a3d;
+    --display: "Avenir Next Condensed", "AvenirNextCondensed-Medium",
+               "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
@@ -25,36 +34,65 @@
     line-height: 1.45;
   }
 
-  /* Remove Before Flight banner */
+  /* ---------- The flight tag (header) ---------- */
   .flag {
-    background: repeating-linear-gradient(
-      45deg, var(--flag-red), var(--flag-red) 18px,
-      var(--flag-red-dark) 18px, var(--flag-red-dark) 36px);
+    position: relative;
+    background: var(--navy);
     color: #fff;
-    padding: 18px 24px;
+    padding: 20px 26px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 20px;
     border-bottom: 4px solid var(--gold);
+    overflow: hidden;
   }
+  /* striped layer: fades out when the day is cleared */
+  .flag::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg, var(--blue), var(--blue) 18px,
+      var(--navy) 18px, var(--navy) 36px);
+    opacity: 1;
+    transition: opacity .9s ease;
+  }
+  body.cleared .flag::before { opacity: 0; }
+  .flag > * { position: relative; }
+
+  .grommet {
+    flex: none;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f5f2ea, #b9b29f 60%, #8d8672);
+    box-shadow: inset 0 0 0 7px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.4);
+  }
+  .flag-text { flex: 1; min-width: 0; }
   .flag h1 {
     margin: 0;
-    font-size: 1.9rem;
-    letter-spacing: 4px;
-    font-weight: 800;
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 5px;
+    font-weight: 700;
     text-transform: uppercase;
-    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .flag .tag {
-    font-size: .72rem;
+    font-size: .74rem;
     letter-spacing: 3px;
     text-transform: uppercase;
-    opacity: .9;
+    opacity: .92;
+    margin-top: 2px;
   }
-  .clock { text-align: right; }
+  body.cleared .flag .tag { color: var(--gold); opacity: 1; }
+  .clock { text-align: right; flex: none; }
   .clock .time { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .clock .date { font-size: .8rem; opacity: .9; }
 
+  /* ---------- Grid ---------- */
   .wrap {
     max-width: 1200px;
     margin: 0 auto;
@@ -72,19 +110,81 @@
   }
   .card h2 {
     margin: 0 0 12px;
-    font-size: .82rem;
-    letter-spacing: 2px;
+    font-family: var(--display);
+    font-size: .95rem;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: var(--flag-red);
+    color: var(--blue);
     border-bottom: 2px solid var(--line);
     padding-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 600;
   }
   .span2 { grid-column: span 2; }
+  .full  { grid-column: 1 / -1; }
 
-  /* Preflight checklist */
+  /* ---------- Pomodoro: a slim instrument strip, not a card ---------- */
+  .pomo-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 18px;
+  }
+  .pomo-strip .strip-label {
+    font-family: var(--display);
+    font-size: .85rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    font-weight: 600;
+    flex: none;
+  }
+  .pomo-strip .mode {
+    font-size: .72rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); flex: none;
+  }
+  .pomo-strip .display {
+    font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: 1px; flex: none; min-width: 5ch;
+  }
+  .pomo-strip .controls { display: flex; gap: 8px; flex: none; }
+  .pomo-strip .controls .btn { padding: 5px 12px; font-size: .85rem; }
+  .pomo-strip .small { margin-left: auto; }
+
+  /* ---------- Preflight: the dominant card ---------- */
+  .preflight { border-top: 6px solid var(--gold); }
+  body.cleared .preflight { border-top-color: var(--blue); }
+  .preflight h2 { font-size: 1.05rem; }
+  .preflight h2 .badge {
+    font-size: .68rem; letter-spacing: 2px; padding: 3px 10px;
+    border-radius: 3px; background: var(--gold); color: var(--navy);
+    display: none;
+  }
+  body.cleared .preflight h2 .badge { display: inline-block; }
+
+  /* progress ribbon: one segment per check */
+  .ribbon { display: flex; gap: 4px; margin: 4px 0 12px; }
+  .ribbon i {
+    flex: 1; height: 8px; border-radius: 2px;
+    background: var(--line);
+  }
+  .ribbon i.on { background: var(--gold-deep); }
+  body.cleared .ribbon i.on { background: var(--blue); }
+
+  .preflight .check-item {
+    padding: 10px 0 10px 12px;
+    border-left: 3px solid var(--gold-deep);
+    margin: 4px 0;
+    border-bottom: none;
+    background: linear-gradient(90deg, rgba(242,199,92,.12), transparent 40%);
+    border-radius: 0 6px 6px 0;
+  }
+  .preflight .check-item.done { border-left-color: var(--line); background: none; }
+  .preflight .check-item label { font-size: 1rem; }
+
+  /* ---------- Checklists (shared) ---------- */
   .check-item {
     display: flex;
     align-items: center;
@@ -105,7 +205,7 @@
     background: none; border: none; color: var(--muted);
     cursor: pointer; font-size: 1rem; line-height: 1; flex: none; padding: 0 4px;
   }
-  .check-item .x:hover { color: var(--flag-red); }
+  .check-item .x:hover { color: var(--blue); }
 
   /* Inline command hints (Git Preflight) */
   .cmd {
@@ -113,11 +213,11 @@
     margin-left: 10px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: .78rem;
-    background: #f4f6f9;
+    background: #f6f4ee;
     border: 1px solid var(--line);
     border-radius: 4px;
     padding: 1px 7px;
-    color: var(--flag-red-dark);
+    color: var(--navy);
     text-decoration: none;
   }
   .check-item.done .cmd { opacity: .45; text-decoration: none; }
@@ -132,26 +232,17 @@
   }
   textarea { width: 100%; resize: vertical; min-height: 120px; }
   .btn {
-    background: var(--flag-red);
+    background: var(--blue);
     color: #fff;
     border: none;
     cursor: pointer;
     font-weight: 600;
     letter-spacing: .5px;
   }
-  .btn:hover { background: var(--flag-red-dark); }
-  .btn.ghost { background: #fff; color: var(--flag-red); border: 1px solid var(--flag-red); }
-  .btn.ghost:hover { background: #fbeef0; }
-
-  /* Pomodoro */
-  .pomo { text-align: center; }
-  .pomo .display {
-    font-size: 3.2rem; font-weight: 800; font-variant-numeric: tabular-nums;
-    letter-spacing: 2px; margin: 6px 0;
-  }
-  .pomo .mode { font-size: .75rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-  .pomo .controls { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
-  .pomo .controls .btn { padding: 8px 14px; }
+  .btn:hover { background: var(--navy); }
+  .btn.ghost { background: #fff; color: var(--blue); border: 1px solid var(--blue); }
+  .btn.ghost:hover { background: #eef3f8; }
+  :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   /* Links */
   .links a {
@@ -161,15 +252,15 @@
     border: 1px solid var(--line); border-radius: 7px;
     font-weight: 600;
   }
-  .links a:hover { border-color: var(--flag-red); color: var(--flag-red); }
-  .links a .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flag-red); flex: none; }
+  .links a:hover { border-color: var(--blue); color: var(--blue); }
+  .links a .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); flex: none; }
 
   /* RSS */
   #rssList { list-style: none; margin: 0; padding: 0; }
   #rssList li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
   #rssList li:last-child { border-bottom: none; }
   #rssList a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: .92rem; }
-  #rssList a:hover { color: var(--flag-red); }
+  #rssList a:hover { color: var(--blue); }
   #rssList .meta { font-size: .72rem; color: var(--muted); }
   .rss-cfg { display: flex; gap: 6px; margin-top: 10px; }
   .rss-cfg input { flex: 1; font-size: .8rem; }
@@ -182,15 +273,33 @@
   .grat-list .x { color: var(--muted); cursor: pointer; border: none; background: none; font-size: 1rem; }
   .small { font-size: .72rem; color: var(--muted); }
   .iconbtn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .72rem; letter-spacing: 1px; }
-  .iconbtn:hover { color: var(--flag-red); }
+  .iconbtn:hover { color: var(--blue); }
+
+  /* ---------- Responsive: never fewer than two columns until phone width ---------- */
+  @media (max-width: 1000px) {
+    .wrap { grid-template-columns: repeat(2, 1fr); }
+    .span2 { grid-column: span 2; }   /* full width of the 2-col grid */
+    .flag h1 { font-size: 1.6rem; letter-spacing: 4px; }
+  }
+  @media (max-width: 600px) {
+    .wrap { grid-template-columns: 1fr; }
+    .span2 { grid-column: span 1; }
+    .pomo-strip { flex-wrap: wrap; }
+    .pomo-strip .small { margin-left: 0; }
+    .flag h1 { font-size: 1.3rem; letter-spacing: 3px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flag::before { transition: none; }
+  }
 </style>
 </head>
 <body>
 
 <header class="flag">
-  <div>
-    <h1>Go, Set the World on Fire.</h1>
-    <div class="tag">Preflight check before you taxi into the day</div>
+  <div class="grommet" aria-hidden="true"></div>
+  <div class="flag-text">
+    <h1 id="flagTitle">Remove Before Flight</h1>
+    <div class="tag" id="flagTag">Preflight check before you taxi into the day</div>
   </div>
   <div class="clock">
     <div class="time" id="clock">--:--</div>
@@ -200,27 +309,31 @@
 
 <main class="wrap">
 
-  <!-- PREFLIGHT CHECKLIST -->
-  <section class="card">
-    <h2>Preflight Checklist <span class="reset-note" id="checkStatus"></span></h2>
+  <!-- POMODORO: slim instrument strip across the top -->
+  <section class="card pomo-strip full">
+    <span class="strip-label">Pomodoro</span>
+    <span class="mode" id="pomoMode">Focus</span>
+    <span class="display" id="pomoDisplay">25:00</span>
+    <span class="controls">
+      <button class="btn" id="pomoStart" onclick="pomoToggle()">Start</button>
+      <button class="btn ghost" onclick="pomoReset()">Reset</button>
+      <button class="btn ghost" onclick="pomoSwitch()">Switch</button>
+    </span>
+    <span class="small">Focus 25 / Break 5 &middot; Completed today: <span id="pomoCount">0</span></span>
+  </section>
+
+  <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
+  <section class="card span2 preflight">
+    <h2>Preflight Checklist
+      <span class="badge">Cleared</span>
+      <span class="reset-note" id="checkStatus"></span>
+    </h2>
+    <div class="ribbon" id="preflightRibbon" aria-hidden="true"></div>
     <div id="checklist"></div>
     <div class="check-add">
       <input type="text" id="newCheckItem" placeholder="Add a check item">
       <button class="btn" onclick="addCheckItem()">Add</button>
     </div>
-  </section>
-
-  <!-- POMODORO -->
-  <section class="card pomo">
-    <h2>Pomodoro</h2>
-    <div class="mode" id="pomoMode">Focus</div>
-    <div class="display" id="pomoDisplay">25:00</div>
-    <div class="controls">
-      <button class="btn" id="pomoStart" onclick="pomoToggle()">Start</button>
-      <button class="btn ghost" onclick="pomoReset()">Reset</button>
-      <button class="btn ghost" onclick="pomoSwitch()">Switch</button>
-    </div>
-    <div class="small" style="margin-top:10px">Focus 25 / Break 5. Completed today: <span id="pomoCount">0</span></div>
   </section>
 
   <!-- QUICK LINKS -->
@@ -248,6 +361,12 @@
     </div>
   </section>
 
+  <!-- SAYING OF THE DAY -->
+  <section class="card">
+    <h2>Saying of the Day</h2>
+    <div class="quote" id="quote"></div>
+  </section>
+
   <!-- MOON SHOTS -> Someday Maybe Doc -->
   <section class="card">
     <h2>Moon Shots <a class="iconbtn" id="somedayLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
@@ -272,12 +391,6 @@
       <input type="text" id="docUrlInput" placeholder="Google Doc URL">
       <button class="btn ghost" onclick="saveDocConfig()">Set</button>
     </div>
-  </section>
-
-  <!-- SAYING OF THE DAY -->
-  <section class="card">
-    <h2>Saying of the Day</h2>
-    <div class="quote" id="quote"></div>
   </section>
 
   <!-- CREIGHTON RSS -->
@@ -356,12 +469,31 @@ function renderChecks() {
   const done = data.items.filter(x=>x.done).length;
   document.getElementById('checkStatus').textContent =
     `${done}/${data.items.length} cleared - resets daily`;
+  updateFlightState(done, data.items.length);
 }
 function toggleCheck(i){ const d=loadChecks(); d.items[i].done=!d.items[i].done; LS.set('checks',d); renderChecks(); }
 function delCheck(i){ const d=loadChecks(); d.items.splice(i,1); LS.set('checks',d); renderChecks(); }
 function addCheckItem(){
   const inp=document.getElementById('newCheckItem'); const t=inp.value.trim(); if(!t)return;
   const d=loadChecks(); d.items.push({t,done:false}); LS.set('checks',d); inp.value=''; renderChecks();
+}
+
+/* ---------- flight state: the tag clears when the preflight does ---------- */
+function updateFlightState(done, total){
+  const cleared = total > 0 && done === total;
+  document.body.classList.toggle('cleared', cleared);
+  document.getElementById('flagTitle').textContent =
+    cleared ? 'Go, Set the World on Fire.' : 'Remove Before Flight';
+  document.getElementById('flagTag').textContent =
+    cleared ? "Cleared for today's departure"
+            : `${total - done} check${total - done === 1 ? '' : 's'} remaining before you taxi`;
+  const ribbon = document.getElementById('preflightRibbon');
+  ribbon.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const seg = document.createElement('i');
+    if (i < done) seg.className = 'on';
+    ribbon.appendChild(seg);
+  }
 }
 renderChecks();
 
@@ -396,6 +528,8 @@ function saveIntentions(){
   const stamp = new Date().toLocaleString();
   status.textContent = 'Saving...';
   btn.disabled = true;
+  // Note: no-cors makes the response opaque; "Sent" means the request was
+  // dispatched, not that the Apps Script confirmed receipt.
   fetch(ep, {
     method: 'POST',
     mode: 'no-cors',
@@ -577,6 +711,8 @@ function localQuote(){
 async function loadReflection(){
   localQuote(); // immediate offline fallback
   try {
+    // Fetched via a third-party CORS proxy; the feed URL and response pass
+    // through api.allorigins.win. Public feeds only.
     const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(REFLECTION_FEED));
     const xml = new DOMParser().parseFromString(await res.text(), 'text/xml');
     const item = xml.querySelector('item');
@@ -602,6 +738,8 @@ async function loadRSS(){
   if(!url){ list.innerHTML='<li class="small">Set a feed URL below, then Refresh.</li>'; return; }
   list.innerHTML='<li class="small">Loading...</li>';
   try {
+    // Same third-party proxy as above: whatever URL is saved here is sent
+    // to api.allorigins.win. Do not use feeds containing tokens.
     const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
     const text = await res.text();
     const xml = new DOMParser().parseFromString(text, 'text/xml');
