@@ -56,9 +56,17 @@ fi
 head_ "3. Secret patterns in tracked content"
 # ---------------------------------------------------------------
 scan_tracked() {
-  local label="$1" pattern="$2" level="$3"
+  local label="$1" pattern="$2" level="$3" ignore="${4:-}"
   local hits
   hits=$(git grep -n -I -E "$pattern" -- . 2>/dev/null || true)
+  # Optional 4th arg: matches that are known-harmless template text. Blank
+  # them out, then re-test the line — so a line is only cleared when EVERY
+  # match on it was a placeholder, never when a real one sits alongside.
+  if [ -n "$hits" ] && [ -n "$ignore" ]; then
+    hits=$(printf '%s\n' "$hits" \
+      | sed -E "s@$ignore@__PLACEHOLDER__@g" \
+      | grep -E "$pattern" || true)
+  fi
   if [ -n "$hits" ]; then
     if [ "$level" = "fail" ]; then
       fail "$label"
@@ -79,9 +87,12 @@ scan_tracked "Apps Script /exec endpoint" \
 scan_tracked "Google Docs or Drive document URL" \
   'docs\.google\.com/(document|spreadsheets)/d/[A-Za-z0-9_-]{20,}' fail
 
-# Local absolute paths leak your username and folder layout.
+# Local absolute paths leak your username and folder layout. Conventional
+# placeholder account names are template text, not a real account, so they
+# are exempt (case-insensitive). Any other account name still fails.
 scan_tracked "absolute /Users/ path (leaks your username)" \
-  '/Users/[A-Za-z0-9._-]+/' fail
+  '/Users/[A-Za-z0-9._-]+/' fail \
+  '/Users/([Yy][Oo][Uu]|[Uu][Ss][Ee][Rr]|[Uu][Ss][Ee][Rr][Nn][Aa][Mm][Ee]|[Yy][Oo][Uu][Rr][Nn][Aa][Mm][Ee])/'
 
 # Generic API keys / tokens
 scan_tracked "API key or token assignment" \
