@@ -1,0 +1,38 @@
+# ---- Python ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.Python
+
+# ---- Secrets: never commit these ----
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+secrets.json
+credentials.json
+config.local.js
+config.local.json
+service-account*.json
+
+# ---- macOS ----
+.DS_Store
+.AppleDouble
+._*
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+
+# ---- Tooling caches ----
+.detect-secrets-cache/
+.pre-commit-cache/
+
+# ---- Local-only dashboard config ----
+# If you ever externalize the Apps Script endpoint or Doc URL,
+# put it here and keep it out of git.
+local-config.js

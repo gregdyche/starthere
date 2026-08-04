@@ -1,0 +1,36 @@
+# Runs automatically on every `git commit` after you run `pre-commit install`.
+# If any hook fails, the commit is BLOCKED. That is the point.
+
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        # Don't scan the baseline file itself or the lockfile
+        exclude: |
+          (?x)^(
+            \.secrets\.baseline|
+            requirements\.txt
+          )$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Blocks accidental SSH / TLS private keys
+      - id: detect-private-key
+
+      # Blocks accidental AWS credentials
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
+
+      # Catches a venv or dataset being committed by mistake
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+
+      # Hygiene
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-case-conflict

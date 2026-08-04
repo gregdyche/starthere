@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>START HERE</title>
+<style>
+  :root {
+    --flag-red: #00447c;        /* Creighton blue */
+    --flag-red-dark: #002f5f;   /* deep navy */
+    --gold: #f2c75c;            /* Creighton gold accent */
+    --ink: #1a1a1a;
+    --paper: #eef1f5;
+    --card: #ffffff;
+    --muted: #6b6b6b;
+    --line: #d9e0ea;
+    --good: #1f7a3d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  /* Remove Before Flight banner */
+  .flag {
+    background: repeating-linear-gradient(
+      45deg, var(--flag-red), var(--flag-red) 18px,
+      var(--flag-red-dark) 18px, var(--flag-red-dark) 36px);
+    color: #fff;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 4px solid var(--gold);
+  }
+  .flag h1 {
+    margin: 0;
+    font-size: 1.9rem;
+    letter-spacing: 4px;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .flag .tag {
+    font-size: .72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: .9;
+  }
+  .clock { text-align: right; }
+  .clock .time { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .clock .date { font-size: .8rem; opacity: .9; }
+
+  .wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .card h2 {
+    margin: 0 0 12px;
+    font-size: .82rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--flag-red);
+    border-bottom: 2px solid var(--line);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .span2 { grid-column: span 2; }
+
+  /* Preflight checklist */
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item input[type=checkbox] {
+    width: 20px; height: 20px; accent-color: var(--good); cursor: pointer; flex: none;
+  }
+  .check-item label { flex: 1; cursor: pointer; }
+  .check-item.done label { text-decoration: line-through; color: var(--muted); }
+  .check-add { display: flex; gap: 6px; margin-top: 10px; }
+  .check-add input { flex: 1; }
+  .reset-note { font-size: .7rem; color: var(--muted); font-weight: 400; letter-spacing: 0; text-transform: none; }
+  .check-item .x {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 1rem; line-height: 1; flex: none; padding: 0 4px;
+  }
+  .check-item .x:hover { color: var(--flag-red); }
+
+  /* Inline command hints (Git Preflight) */
+  .cmd {
+    display: inline-block;
+    margin-left: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .78rem;
+    background: #f4f6f9;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 7px;
+    color: var(--flag-red-dark);
+    text-decoration: none;
+  }
+  .check-item.done .cmd { opacity: .45; text-decoration: none; }
+
+  input[type=text], textarea, .btn {
+    font: inherit;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 9px;
+    background: #fff;
+    color: var(--ink);
+  }
+  textarea { width: 100%; resize: vertical; min-height: 120px; }
+  .btn {
+    background: var(--flag-red);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: .5px;
+  }
+  .btn:hover { background: var(--flag-red-dark); }
+  .btn.ghost { background: #fff; color: var(--flag-red); border: 1px solid var(--flag-red); }
+  .btn.ghost:hover { background: #fbeef0; }
+
+  /* Pomodoro */
+  .pomo { text-align: center; }
+  .pomo .display {
+    font-size: 3.2rem; font-weight: 800; font-variant-numeric: tabular-nums;
+    letter-spacing: 2px; margin: 6px 0;
+  }
+  .pomo .mode { font-size: .75rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+  .pomo .controls { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+  .pomo .controls .btn { padding: 8px 14px; }
+
+  /* Links */
+  .links a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 10px; margin-bottom: 7px;
+    text-decoration: none; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 7px;
+    font-weight: 600;
+  }
+  .links a:hover { border-color: var(--flag-red); color: var(--flag-red); }
+  .links a .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flag-red); flex: none; }
+
+  /* RSS */
+  #rssList { list-style: none; margin: 0; padding: 0; }
+  #rssList li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  #rssList li:last-child { border-bottom: none; }
+  #rssList a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: .92rem; }
+  #rssList a:hover { color: var(--flag-red); }
+  #rssList .meta { font-size: .72rem; color: var(--muted); }
+  .rss-cfg { display: flex; gap: 6px; margin-top: 10px; }
+  .rss-cfg input { flex: 1; font-size: .8rem; }
+
+  /* Quote + gratitude */
+  .quote { font-size: 1.05rem; font-style: italic; line-height: 1.5; }
+  .quote .who { display: block; margin-top: 8px; font-style: normal; font-size: .8rem; color: var(--muted); font-weight: 600; }
+  .grat-list { list-style: none; margin: 10px 0 0; padding: 0; font-size: .9rem; }
+  .grat-list li { padding: 5px 0; border-bottom: 1px dashed var(--line); display: flex; justify-content: space-between; gap: 8px; }
+  .grat-list .x { color: var(--muted); cursor: pointer; border: none; background: none; font-size: 1rem; }
+  .small { font-size: .72rem; color: var(--muted); }
+  .iconbtn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: .72rem; letter-spacing: 1px; }
+  .iconbtn:hover { color: var(--flag-red); }
+</style>
+</head>
+<body>
+
+<header class="flag">
+  <div>
+    <h1>Go, Set the World on Fire.</h1>
+    <div class="tag">Preflight check before you taxi into the day</div>
+  </div>
+  <div class="clock">
+    <div class="time" id="clock">--:--</div>
+    <div class="date" id="todayDate"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- PREFLIGHT CHECKLIST -->
+  <section class="card">
+    <h2>Preflight Checklist <span class="reset-note" id="checkStatus"></span></h2>
+    <div id="checklist"></div>
+    <div class="check-add">
+      <input type="text" id="newCheckItem" placeholder="Add a check item">
+      <button class="btn" onclick="addCheckItem()">Add</button>
+    </div>
+  </section>
+
+  <!-- POMODORO -->
+  <section class="card pomo">
+    <h2>Pomodoro</h2>
+    <div class="mode" id="pomoMode">Focus</div>
+    <div class="display" id="pomoDisplay">25:00</div>
+    <div class="controls">
+      <button class="btn" id="pomoStart" onclick="pomoToggle()">Start</button>
+      <button class="btn ghost" onclick="pomoReset()">Reset</button>
+      <button class="btn ghost" onclick="pomoSwitch()">Switch</button>
+    </div>
+    <div class="small" style="margin-top:10px">Focus 25 / Break 5. Completed today: <span id="pomoCount">0</span></div>
+  </section>
+
+  <!-- QUICK LINKS -->
+  <section class="card links">
+    <h2>Launch Pad</h2>
+    <a href="https://track.toggl.com/timer" target="_blank"><span class="dot"></span>Toggl Timer</a>
+    <a href="#" id="briefingLink"><span class="dot"></span>Daily Briefing</a>
+    <a href="https://blueline.instructure.com" target="_blank"><span class="dot"></span>Canvas (Blueline)</a>
+    <a href="https://mail.google.com" target="_blank"><span class="dot"></span>Email</a>
+    <a href="https://calendar.google.com" target="_blank"><span class="dot"></span>Calendar</a>
+    <div class="small" style="margin-top:8px">Edit links in the file. Briefing path set below.</div>
+    <div class="rss-cfg">
+      <input type="text" id="briefingPath" placeholder="file:///Users/you/.../daily-brief.md">
+      <button class="btn ghost" onclick="saveBriefing()">Set</button>
+    </div>
+  </section>
+
+  <!-- GIT PREFLIGHT -->
+  <section class="card span2">
+    <h2>Git Preflight <span class="reset-note" id="gitStatus"></span> <button class="iconbtn" onclick="resetGitChecks()">Reset</button></h2>
+    <div id="gitChecklist"></div>
+    <div class="check-add">
+      <input type="text" id="newGitItem" placeholder="Add a step" onkeydown="if(event.key==='Enter')addGitCheckItem()">
+      <button class="btn" onclick="addGitCheckItem()">Add</button>
+    </div>
+  </section>
+
+  <!-- MOON SHOTS -> Someday Maybe Doc -->
+  <section class="card">
+    <h2>Moon Shots <a class="iconbtn" id="somedayLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
+    <textarea id="moonshots" placeholder="Big ideas that take more than a month. Save appends to your 'Someday Maybe' Google Doc."></textarea>
+    <div class="check-add">
+      <button class="btn" id="moonSave" onclick="saveMoonshots()">Save to Someday Maybe</button>
+      <span class="small" id="moonStatus" style="align-self:center"></span>
+    </div>
+  </section>
+
+  <!-- DAILY INTENTIONS -> Google Doc -->
+  <section class="card span2">
+    <h2>Daily Intentions <a class="iconbtn" id="docLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
+    <textarea id="intentions" placeholder="What do I intend to make true today? Save appends to your Google Doc."></textarea>
+    <div class="check-add">
+      <button class="btn" id="intentSave" onclick="saveIntentions()">Save to Google Doc</button>
+      <span class="small" id="intentStatus" style="align-self:center"></span>
+    </div>
+    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
+    <div class="rss-cfg">
+      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
+      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
+      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
+    </div>
+  </section>
+
+  <!-- SAYING OF THE DAY -->
+  <section class="card">
+    <h2>Saying of the Day</h2>
+    <div class="quote" id="quote"></div>
+  </section>
+
+  <!-- CREIGHTON RSS -->
+  <section class="card span2">
+    <h2>Creighton Feed <button class="iconbtn" onclick="loadRSS()">Refresh</button></h2>
+    <ul id="rssList"><li class="small">Set a feed URL below, then Refresh.</li></ul>
+    <div class="rss-cfg">
+      <input type="text" id="rssUrl" placeholder="https://www.creighton.edu/.../feed (RSS/Atom URL)">
+      <button class="btn" onclick="saveRSS()">Save Feed</button>
+    </div>
+  </section>
+
+  <!-- GRATITUDE -->
+  <section class="card">
+    <h2>Gratitude</h2>
+    <div class="check-add">
+      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
+      <button class="btn" onclick="addGrat()">Add</button>
+    </div>
+    <ul class="grat-list" id="gratList"></ul>
+    <div class="small" id="gratNote" style="margin-top:8px"></div>
+  </section>
+
+</main>
+
+<script>
+/* ---------- helpers ---------- */
+const LS = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+/* ---------- clock ---------- */
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('todayDate').textContent =
+    n.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
+}
+setInterval(tick, 1000); tick();
+
+/* ---------- preflight checklist (resets daily) ---------- */
+const DEFAULT_CHECKS = [
+  "OneDrive is syncing",
+  "Calendar reviewed",
+  "Toggl timer started",
+  "Daily briefing read",
+  "Phone on Do Not Disturb"
+];
+function loadChecks() {
+  let data = LS.get('checks', null);
+  if (!data) {
+    data = { date: todayKey(), items: DEFAULT_CHECKS.map(t => ({t, done:false})) };
+    LS.set('checks', data);
+  } else if (data.date !== todayKey()) {
+    data.date = todayKey();
+    data.items = data.items.map(it => ({ t: it.t, done: false })); // keep items, clear checkmarks
+    LS.set('checks', data);
+  }
+  return data;
+}
+function renderChecks() {
+  const data = loadChecks();
+  const box = document.getElementById('checklist');
+  box.innerHTML = '';
+  data.items.forEach((it, i) => {
+    const row = document.createElement('div');
+    row.className = 'check-item' + (it.done ? ' done' : '');
+    row.innerHTML = `<input type="checkbox" ${it.done?'checked':''} onchange="toggleCheck(${i})">
+      <label onclick="toggleCheck(${i})">${escapeHtml(it.t)}</label>
+      <button class="x" onclick="delCheck(${i})">&times;</button>`;
+    box.appendChild(row);
+  });
+  const done = data.items.filter(x=>x.done).length;
+  document.getElementById('checkStatus').textContent =
+    `${done}/${data.items.length} cleared - resets daily`;
+}
+function toggleCheck(i){ const d=loadChecks(); d.items[i].done=!d.items[i].done; LS.set('checks',d); renderChecks(); }
+function delCheck(i){ const d=loadChecks(); d.items.splice(i,1); LS.set('checks',d); renderChecks(); }
+function addCheckItem(){
+  const inp=document.getElementById('newCheckItem'); const t=inp.value.trim(); if(!t)return;
+  const d=loadChecks(); d.items.push({t,done:false}); LS.set('checks',d); inp.value=''; renderChecks();
+}
+renderChecks();
+
+/* ---------- doc config (stored in this browser, never in the file) ---------- */
+function docEndpoint(){ return LS.get('docEndpoint', ''); }
+function saveDocConfig(){
+  LS.set('docEndpoint', document.getElementById('docEndpointInput').value.trim());
+  LS.set('docUrl', document.getElementById('docUrlInput').value.trim());
+  refreshDocConfig();
+}
+function refreshDocConfig(){
+  const ep = LS.get('docEndpoint',''), du = LS.get('docUrl','');
+  document.getElementById('docEndpointInput').value = ep;
+  document.getElementById('docUrlInput').value = du;
+  const link = document.getElementById('docLink');
+  link.setAttribute('href', safeUrl(du));
+  link.style.display = du ? '' : 'none';
+}
+refreshDocConfig();
+
+/* ---------- daily intentions -> Google Doc ---------- */
+const intentBox = document.getElementById('intentions');
+intentBox.value = LS.get('intentions', '');
+intentBox.addEventListener('input', () => LS.set('intentions', intentBox.value));
+function saveIntentions(){
+  const status = document.getElementById('intentStatus');
+  const btn = document.getElementById('intentSave');
+  const text = intentBox.value.trim();
+  if(!text){ status.textContent = 'Nothing to save.'; return; }
+  const ep = docEndpoint();
+  if(!ep){ status.textContent = 'No endpoint set. Add one below.'; return; }
+  const stamp = new Date().toLocaleString();
+  status.textContent = 'Saving...';
+  btn.disabled = true;
+  fetch(ep, {
+    method: 'POST',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ content: `[${stamp}]\n${text}` })
+  })
+  .then(() => { status.textContent = 'Sent to Google Doc.'; btn.disabled = false; })
+  .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
+}
+
+/* ---------- moon shots -> Someday Maybe Doc ---------- */
+const moonBox = document.getElementById('moonshots');
+moonBox.value = LS.get('moonshots', '');
+moonBox.addEventListener('input', () => LS.set('moonshots', moonBox.value));
+function saveMoonshots(){
+  const status = document.getElementById('moonStatus');
+  const btn = document.getElementById('moonSave');
+  const text = moonBox.value.trim();
+  if(!text){ status.textContent = 'Nothing to save.'; return; }
+  const ep = docEndpoint();
+  if(!ep){ status.textContent = 'No endpoint set. Add one below.'; return; }
+  const stamp = new Date().toLocaleString();
+  status.textContent = 'Saving...';
+  btn.disabled = true;
+  fetch(ep, {
+    method: 'POST',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ content: `[${stamp}]\n${text}`, target: 'someday' })
+  })
+  .then(() => { status.textContent = 'Sent to Someday Maybe.'; btn.disabled = false; })
+  .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
+}
+
+/* ---------- git preflight (manual reset) ---------- */
+const DEFAULT_GIT_CHECKS = [
+  { t:"Pull before you touch anything",            c:"git pull" },
+  { t:"See what changed",                          c:"git status" },
+  { t:"Stage your changes",                        c:"git add ." },
+  { t:"Confirm no .env, venv, or keys are staged", c:"git status" },
+  { t:"Commit with a message that says what changed", c:"git commit -m \"...\"" },
+  { t:"Push to GitHub",                            c:"git push" },
+  { t:"Confirm it landed on github.com",           c:"" }
+];
+function loadGitChecks(){
+  let d = LS.get('gitChecks', null);
+  if(!d || !Array.isArray(d.items)){
+    d = { items: DEFAULT_GIT_CHECKS.map(x => ({ t:x.t, c:x.c, done:false })) };
+    LS.set('gitChecks', d);
+  }
+  return d;
+}
+function renderGitChecks(){
+  const d = loadGitChecks();
+  const box = document.getElementById('gitChecklist');
+  box.innerHTML = '';
+  d.items.forEach((it, i) => {
+    const row = document.createElement('div');
+    row.className = 'check-item' + (it.done ? ' done' : '');
+    row.innerHTML = `<input type="checkbox" ${it.done?'checked':''} onchange="toggleGitCheck(${i})">
+      <label onclick="toggleGitCheck(${i})">${escapeHtml(it.t)}${it.c?`<span class="cmd">${escapeHtml(it.c)}</span>`:''}</label>
+      <button class="x" onclick="delGitCheck(${i})">&times;</button>`;
+    box.appendChild(row);
+  });
+  const done = d.items.filter(x => x.done).length;
+  document.getElementById('gitStatus').textContent =
+    `${done}/${d.items.length} cleared - reset when you start a new session`;
+}
+function toggleGitCheck(i){ const d=loadGitChecks(); d.items[i].done=!d.items[i].done; LS.set('gitChecks',d); renderGitChecks(); }
+function delGitCheck(i){ const d=loadGitChecks(); d.items.splice(i,1); LS.set('gitChecks',d); renderGitChecks(); }
+function addGitCheckItem(){
+  const inp=document.getElementById('newGitItem'); const t=inp.value.trim(); if(!t)return;
+  const d=loadGitChecks(); d.items.push({t,c:'',done:false}); LS.set('gitChecks',d); inp.value=''; renderGitChecks();
+}
+function resetGitChecks(){
+  const d=loadGitChecks();
+  d.items=d.items.map(x=>({t:x.t,c:x.c,done:false}));
+  LS.set('gitChecks',d); renderGitChecks();
+}
+renderGitChecks();
+
+/* ---------- pomodoro ---------- */
+let pomo = { mode:'focus', secs:25*60, running:false, timer:null };
+const FOCUS=25*60, BREAK=5*60;
+function fmt(s){ const m=Math.floor(s/60), x=s%60; return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; }
+function renderPomo(){
+  document.getElementById('pomoDisplay').textContent = fmt(pomo.secs);
+  document.getElementById('pomoMode').textContent = pomo.mode==='focus'?'Focus':'Break';
+  document.getElementById('pomoStart').textContent = pomo.running?'Pause':'Start';
+  let c = LS.get('pomoCount', {date:todayKey(), n:0});
+  if(c.date!==todayKey()){ c={date:todayKey(),n:0}; LS.set('pomoCount',c); }
+  document.getElementById('pomoCount').textContent = c.n;
+}
+function pomoToggle(){
+  if(pomo.running){ clearInterval(pomo.timer); pomo.running=false; }
+  else {
+    pomo.running=true;
+    pomo.timer=setInterval(()=>{
+      pomo.secs--;
+      if(pomo.secs<=0){
+        clearInterval(pomo.timer); pomo.running=false;
+        if(pomo.mode==='focus'){
+          let c=LS.get('pomoCount',{date:todayKey(),n:0});
+          if(c.date!==todayKey())c={date:todayKey(),n:0};
+          c.n++; LS.set('pomoCount',c);
+        }
+        try{ new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play(); }catch(e){}
+        alert(pomo.mode==='focus'?'Focus block done. Take a break.':'Break over. Back to it.');
+        pomoSwitch();
+      }
+      renderPomo();
+    },1000);
+  }
+  renderPomo();
+}
+function pomoReset(){ clearInterval(pomo.timer); pomo.running=false; pomo.secs=pomo.mode==='focus'?FOCUS:BREAK; renderPomo(); }
+function pomoSwitch(){ clearInterval(pomo.timer); pomo.running=false; pomo.mode=pomo.mode==='focus'?'break':'focus'; pomo.secs=pomo.mode==='focus'?FOCUS:BREAK; renderPomo(); }
+renderPomo();
+
+/* ---------- daily briefing link ---------- */
+function refreshBriefing(){
+  const p = LS.get('briefingPath','');
+  const link = document.getElementById('briefingLink');
+  document.getElementById('briefingPath').value = p;
+  if(p) link.setAttribute('href', p);
+}
+function saveBriefing(){
+  LS.set('briefingPath', document.getElementById('briefingPath').value.trim());
+  refreshBriefing();
+}
+refreshBriefing();
+
+/* ---------- gratitude ---------- */
+function loadGrat(){ return LS.get('gratitude', {}); }
+function renderGrat(){
+  const all=loadGrat(); const today=all[todayKey()]||[];
+  const ul=document.getElementById('gratList'); ul.innerHTML='';
+  today.forEach((g,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span>${escapeHtml(g)}</span><button class="x" onclick="delGrat(${i})">&times;</button>`;
+    ul.appendChild(li);
+  });
+  const days=Object.keys(all).length;
+  document.getElementById('gratNote').textContent = days?`${days} day(s) logged.`:'';
+}
+function addGrat(){
+  const inp=document.getElementById('gratInput'); const v=inp.value.trim(); if(!v)return;
+  const all=loadGrat(); (all[todayKey()]=all[todayKey()]||[]).push(v); LS.set('gratitude',all); inp.value=''; renderGrat();
+}
+function delGrat(i){ const all=loadGrat(); all[todayKey()].splice(i,1); LS.set('gratitude',all); renderGrat(); }
+renderGrat();
+
+/* ---------- saying of the day ---------- */
+const QUOTES = [
+  ["Discipline equals freedom.","Jocko Willink"],
+  ["The obstacle is the way.","Marcus Aurelius"],
+  ["What gets measured gets managed.","Peter Drucker"],
+  ["You do not rise to the level of your goals; you fall to the level of your systems.","James Clear"],
+  ["Slow is smooth, and smooth is fast.","Aviation proverb"],
+  ["The best way to predict the future is to create it.","Peter Drucker"],
+  ["Do the hard things first.","unknown"],
+  ["Amateurs practice until they get it right; professionals practice until they cannot get it wrong.","unknown"],
+  ["Energy and persistence conquer all things.","Benjamin Franklin"],
+  ["Well begun is half done.","Aristotle"],
+  ["Focus is saying no to a thousand good ideas.","Steve Jobs"],
+  ["A goal without a plan is just a wish.","Antoine de Saint-Exupery"],
+  ["Begin where you are. Use what you have. Do what you can.","Arthur Ashe"],
+  ["Done is better than perfect.","unknown"]
+];
+const REFLECTION_FEED = 'https://www.ignatianspirituality.com/feed/';
+function localQuote(){
+  const start=new Date(new Date().getFullYear(),0,0);
+  const day=Math.floor((new Date()-start)/86400000);
+  const q=QUOTES[day % QUOTES.length];
+  document.getElementById('quote').innerHTML=`"${escapeHtml(q[0])}"<span class="who">${escapeHtml(q[1])}</span>`;
+}
+async function loadReflection(){
+  localQuote(); // immediate offline fallback
+  try {
+    const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(REFLECTION_FEED));
+    const xml = new DOMParser().parseFromString(await res.text(), 'text/xml');
+    const item = xml.querySelector('item');
+    if(!item) return;
+    const title = (item.querySelector('title')?.textContent || '').trim();
+    const link = (item.querySelector('link')?.textContent || '#').trim();
+    let desc = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').trim();
+    if(desc.length > 180) desc = desc.slice(0,180).replace(/\s+\S*$/,'') + '...';
+    document.getElementById('quote').innerHTML =
+      (desc ? `${escapeHtml(desc)}` : `${escapeHtml(title)}`) +
+      `<span class="who"><a href="${escapeHtml(safeUrl(link))}" target="_blank" style="color:inherit">Read: ${escapeHtml(title)}</a> - Ignatian Spirituality (Loyola Press)</span>`;
+  } catch(e){ /* keep local quote */ }
+}
+loadReflection();
+
+/* ---------- Creighton RSS ---------- */
+function saveRSS(){ LS.set('rssUrl', document.getElementById('rssUrl').value.trim()); loadRSS(); }
+const DEFAULT_RSS = 'https://www.creightonian.com/category/news/feed/';
+async function loadRSS(){
+  const url = LS.get('rssUrl', DEFAULT_RSS);
+  document.getElementById('rssUrl').value = url;
+  const list = document.getElementById('rssList');
+  if(!url){ list.innerHTML='<li class="small">Set a feed URL below, then Refresh.</li>'; return; }
+  list.innerHTML='<li class="small">Loading...</li>';
+  try {
+    const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+    const text = await res.text();
+    const xml = new DOMParser().parseFromString(text, 'text/xml');
+    let items = [...xml.querySelectorAll('item')];
+    if(!items.length) items = [...xml.querySelectorAll('entry')]; // Atom
+    if(!items.length){ list.innerHTML='<li class="small">No items found. Check the feed URL.</li>'; return; }
+    list.innerHTML='';
+    items.slice(0,8).forEach(it=>{
+      const title=(it.querySelector('title')?.textContent||'Untitled').trim();
+      let link=it.querySelector('link')?.textContent?.trim();
+      if(!link){ const l=it.querySelector('link'); link=l?.getAttribute('href')||'#'; }
+      const date=(it.querySelector('pubDate')?.textContent||it.querySelector('updated')?.textContent||'').trim();
+      const li=document.createElement('li');
+      const d = date ? new Date(date).toLocaleDateString() : '';
+      li.innerHTML=`<a href="${escapeHtml(safeUrl(link))}" target="_blank">${escapeHtml(title)}</a><div class="meta">${d}</div>`;
+      list.appendChild(li);
+    });
+  } catch(e){
+    list.innerHTML='<li class="small">Could not load feed (network or CORS). Try a different feed URL.</li>';
+  }
+}
+loadRSS();
+
+/* ---------- util ---------- */
+function safeUrl(u){
+  try { const p = new URL(u, location.href); return (p.protocol==='http:'||p.protocol==='https:') ? p.href : '#'; }
+  catch { return '#'; }
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>
