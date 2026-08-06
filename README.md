@@ -46,8 +46,18 @@ Set it as your browser homepage or pin the tab.
 
 ## Running it
 
-No build step, no installation, no dependencies. Double-click `STARTHERE.html` and
-it opens in your browser. That is the whole thing.
+No build step, no installation, no dependencies.
+
+**Try it in your browser:** https://gregdyche.github.io/starthere/
+
+**To make it yours:** clone this repo (or Code > Download ZIP), then
+double-click your local `STARTHERE.html`. That is the whole thing.
+Everything you type stays in your own browser (localStorage); nothing
+leaves your machine, which is also why you want a local copy rather
+than the demo link.
+
+(Viewing `STARTHERE.html` on github.com shows the source code. GitHub
+displays files, it does not run them. Use the link above or a local copy.)
 
 Set it as your browser homepage or pin the tab, so opening it is not a decision you
 have to make each morning.
