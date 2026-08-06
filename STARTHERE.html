@@ -94,9 +94,9 @@
 
   /* ---------- Grid ---------- */
   .wrap {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 22px;
+    padding: 16px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
@@ -322,6 +322,33 @@
     <span class="small">Focus 25 / Break 5 &middot; Completed today: <span id="pomoCount">0</span></span>
   </section>
 
+  <!-- DAILY INTENTIONS -> Google Doc -->
+  <section class="card span2">
+    <h2>Daily Intentions <a class="iconbtn" id="docLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
+    <textarea id="intentions" placeholder="What do I intend to make true today? Save appends to your Google Doc."></textarea>
+    <div class="check-add">
+      <button class="btn" id="intentSave" onclick="saveIntentions()">Save to Google Doc</button>
+      <span class="small" id="intentStatus" style="align-self:center"></span>
+    </div>
+    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
+    <div class="rss-cfg">
+      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
+      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
+      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
+    </div>
+  </section>
+
+  <!-- GRATITUDE -->
+  <section class="card">
+    <h2>Gratitude</h2>
+    <div class="check-add">
+      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
+      <button class="btn" onclick="addGrat()">Add</button>
+    </div>
+    <ul class="grat-list" id="gratList"></ul>
+    <div class="small" id="gratNote" style="margin-top:8px"></div>
+  </section>
+
   <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
   <section class="card span2 preflight">
     <h2>Preflight Checklist
@@ -351,6 +378,16 @@
     </div>
   </section>
 
+  <!-- FREQUENT COMMANDS -->
+  <section class="card">
+    <h2>Frequent Commands <span class="reset-note">click to copy</span></h2>
+    <div id="freqList"></div>
+    <div class="check-add">
+      <input type="text" id="newFreqCmd" placeholder="Add a command" onkeydown="if(event.key==='Enter')addFreqItem()">
+      <button class="btn" onclick="addFreqItem()">Add</button>
+    </div>
+  </section>
+
   <!-- GIT PREFLIGHT -->
   <section class="card span2">
     <h2>Git Preflight <span class="reset-note" id="gitStatus"></span> <button class="iconbtn" onclick="resetGitChecks()">Reset</button></h2>
@@ -377,22 +414,6 @@
     </div>
   </section>
 
-  <!-- DAILY INTENTIONS -> Google Doc -->
-  <section class="card span2">
-    <h2>Daily Intentions <a class="iconbtn" id="docLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
-    <textarea id="intentions" placeholder="What do I intend to make true today? Save appends to your Google Doc."></textarea>
-    <div class="check-add">
-      <button class="btn" id="intentSave" onclick="saveIntentions()">Save to Google Doc</button>
-      <span class="small" id="intentStatus" style="align-self:center"></span>
-    </div>
-    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
-    <div class="rss-cfg">
-      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
-      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
-      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
-    </div>
-  </section>
-
   <!-- CREIGHTON RSS -->
   <section class="card span2">
     <h2>Creighton Feed <button class="iconbtn" onclick="loadRSS()">Refresh</button></h2>
@@ -401,17 +422,6 @@
       <input type="text" id="rssUrl" placeholder="https://www.creighton.edu/.../feed (RSS/Atom URL)">
       <button class="btn" onclick="saveRSS()">Save Feed</button>
     </div>
-  </section>
-
-  <!-- GRATITUDE -->
-  <section class="card">
-    <h2>Gratitude</h2>
-    <div class="check-add">
-      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
-      <button class="btn" onclick="addGrat()">Add</button>
-    </div>
-    <ul class="grat-list" id="gratList"></ul>
-    <div class="small" id="gratNote" style="margin-top:8px"></div>
   </section>
 
 </main>
@@ -568,21 +578,30 @@ function saveMoonshots(){
 
 /* ---------- git preflight (manual reset) ---------- */
 const DEFAULT_GIT_CHECKS = [
-  { t:"Pull before you touch anything",            c:"git pull" },
-  { t:"See what changed",                          c:"git status" },
-  { t:"Stage your changes",                        c:"git add ." },
-  { t:"Confirm no .env, venv, or keys are staged", c:"git status" },
-  { t:"Commit with a message that says what changed", c:"git commit -m \"...\"" },
-  { t:"Push to GitHub",                            c:"git push" },
-  { t:"Confirm it landed on github.com",           c:"" }
+  { t:"", c:"git pull" },
+  { t:"", c:"git status" },
+  { t:"", c:"git add ." },
+  { t:"no .env / venv / keys staged", c:"" },
+  { t:"", c:"git commit -m \"msg\"" },
+  { t:"", c:"git push" },
+  { t:"check github.com", c:"" }
 ];
 function loadGitChecks(){
-  let d = LS.get('gitChecks', null);
+  let d = LS.get('gitChecks2', null);
   if(!d || !Array.isArray(d.items)){
     d = { items: DEFAULT_GIT_CHECKS.map(x => ({ t:x.t, c:x.c, done:false })) };
-    LS.set('gitChecks', d);
+    LS.set('gitChecks2', d);
   }
   return d;
+}
+function copyGitCmd(i){
+  const d = loadGitChecks();
+  navigator.clipboard.writeText(d.items[i].c).then(() => {
+    const el = document.getElementById('gitCmd'+i);
+    const old = el.textContent;
+    el.textContent = 'copied';
+    setTimeout(() => { el.textContent = old; }, 800);
+  });
 }
 function renderGitChecks(){
   const d = loadGitChecks();
@@ -592,7 +611,7 @@ function renderGitChecks(){
     const row = document.createElement('div');
     row.className = 'check-item' + (it.done ? ' done' : '');
     row.innerHTML = `<input type="checkbox" ${it.done?'checked':''} onchange="toggleGitCheck(${i})">
-      <label onclick="toggleGitCheck(${i})">${escapeHtml(it.t)}${it.c?`<span class="cmd">${escapeHtml(it.c)}</span>`:''}</label>
+      <label>${escapeHtml(it.t)}${it.c?`<span class="cmd" id="gitCmd${i}" style="cursor:pointer;margin-left:${it.t?'10px':'0'}" title="Click to copy" onclick="copyGitCmd(${i})">${escapeHtml(it.c)}</span>`:''}</label>
       <button class="x" onclick="delGitCheck(${i})">&times;</button>`;
     box.appendChild(row);
   });
@@ -600,18 +619,69 @@ function renderGitChecks(){
   document.getElementById('gitStatus').textContent =
     `${done}/${d.items.length} cleared - reset when you start a new session`;
 }
-function toggleGitCheck(i){ const d=loadGitChecks(); d.items[i].done=!d.items[i].done; LS.set('gitChecks',d); renderGitChecks(); }
-function delGitCheck(i){ const d=loadGitChecks(); d.items.splice(i,1); LS.set('gitChecks',d); renderGitChecks(); }
+function toggleGitCheck(i){ const d=loadGitChecks(); d.items[i].done=!d.items[i].done; LS.set('gitChecks2',d); renderGitChecks(); }
+function delGitCheck(i){ const d=loadGitChecks(); d.items.splice(i,1); LS.set('gitChecks2',d); renderGitChecks(); }
 function addGitCheckItem(){
   const inp=document.getElementById('newGitItem'); const t=inp.value.trim(); if(!t)return;
-  const d=loadGitChecks(); d.items.push({t,c:'',done:false}); LS.set('gitChecks',d); inp.value=''; renderGitChecks();
+  const d=loadGitChecks(); d.items.push({t:'',c:t,done:false}); LS.set('gitChecks2',d); inp.value=''; renderGitChecks();
 }
 function resetGitChecks(){
   const d=loadGitChecks();
   d.items=d.items.map(x=>({t:x.t,c:x.c,done:false}));
-  LS.set('gitChecks',d); renderGitChecks();
+  LS.set('gitChecks2',d); renderGitChecks();
 }
 renderGitChecks();
+
+/* ---------- frequent commands (persistent, editable) ---------- */
+const DEFAULT_FREQ = [
+  { t:"", c:"launchctl list | grep leadgen" },
+  { t:"", c:"launchctl print gui/$(id -u)/com.leadgen.snapshot" },
+  { t:"", c:"tail -20 ~/Library/Logs/leadgen-snapshot.log" },
+  { t:"", c:"source .venv/bin/activate" },
+  { t:"", c:"deactivate" },
+  { t:"", c:"python3 -m venv .venv" }
+];
+function loadFreq(){
+  let d = LS.get('freqCmds2', null);
+  if(!d || !Array.isArray(d.items)){
+    d = { items: DEFAULT_FREQ.map(x => ({ t:x.t, c:x.c })) };
+    LS.set('freqCmds2', d);
+  }
+  return d;
+}
+function renderFreq(){
+  const d = loadFreq();
+  const box = document.getElementById('freqList');
+  box.innerHTML = '';
+  d.items.forEach((it, i) => {
+    const row = document.createElement('div');
+    row.className = 'check-item';
+    row.innerHTML = `<label>${escapeHtml(it.t)}${it.c?`<span class="cmd" id="freqCmd${i}" style="cursor:pointer;margin-left:${it.t?'10px':'0'};word-break:break-all" title="Click to copy" onclick="copyFreq(${i})">${escapeHtml(it.c)}</span>`:''}</label>
+      <button class="x" onclick="delFreq(${i})">&times;</button>`;
+    box.appendChild(row);
+  });
+}
+function copyFreq(i){
+  const d = loadFreq();
+  navigator.clipboard.writeText(d.items[i].c).then(() => {
+    const el = document.getElementById('freqCmd'+i);
+    const old = el.textContent;
+    el.textContent = 'copied';
+    setTimeout(() => { el.textContent = old; }, 800);
+  });
+}
+function delFreq(i){ const d=loadFreq(); d.items.splice(i,1); LS.set('freqCmds2',d); renderFreq(); }
+function addFreqItem(){
+  const c=document.getElementById('newFreqCmd');
+  const cmd=c.value.trim();
+  if(!cmd) return;
+  const d=loadFreq();
+  d.items.push({ t:'', c: cmd });
+  LS.set('freqCmds2', d);
+  c.value='';
+  renderFreq();
+}
+renderFreq();
 
 /* ---------- pomodoro ---------- */
 let pomo = { mode:'focus', secs:25*60, running:false, timer:null };
