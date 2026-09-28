@@ -49,19 +49,39 @@ No build step, no installation, no dependencies.
 
 **Try it in your browser:** https://gregdyche.github.io/starthere/
 
-**To make it yours:** clone this repo (or Code > Download ZIP), then
-double-click your local `STARTHERE.html`. That is the whole thing.
-Everything you type stays in your own browser (localStorage); nothing
-leaves your machine, which is also why you want a local copy rather
-than the demo link.
+**To make it yours:** clone this repo (or Code > Download ZIP). The **This
+Week** and feed cards need the page served over `http://localhost` (see
+[the one wrinkle](#the-one-wrinkle-two-ways-to-open-the-same-file) below), so
+that is the recommended way to open it day to day — not double-clicking the
+file. The easiest way to do that is a one-line shell function:
+
+```bash
+# add to ~/.zshrc (or ~/.bashrc)
+starthere() {
+  cd ~/repos/starthere || return
+  if ! lsof -i :8000 -sTCP:LISTEN >/dev/null 2>&1; then
+    python3 -m http.server 8000 >/dev/null 2>&1 &
+    disown
+  fi
+  open "http://localhost:8000/STARTHERE.html"
+}
+```
+
+Then running `starthere` from any terminal starts (or reuses) the local
+server and opens the page. Everything you type stays in your own browser
+(localStorage); nothing leaves your machine, which is also why you want a
+local copy rather than the demo link.
 
 (Viewing `STARTHERE.html` on github.com shows the source code. GitHub
 displays files, it does not run them. Use the link above or a local copy.)
 
-Set it as your browser homepage or pin the tab, so opening it is not a decision you
-have to make each morning.
+Set it as your browser homepage or pin the `localhost:8000/STARTHERE.html`
+tab, so opening it is not a decision you have to make each morning.
 
 ### The Desktop icon is a symlink, not a copy
+
+If you still want a double-clickable fallback (accepting that This Week and the
+feed cards will not load — see below):
 
 ```bash
 ln -s ~/repos/starthere/STARTHERE.html ~/Desktop/STARTHERE.html
@@ -100,14 +120,17 @@ places, even though it is one file. Two things follow from that.
    gratitude log, and settings are stored per address. Open the page the other way
    and it will look wiped clean — nothing is lost, you are just looking at a
    different drawer.
-2. **The news and reflection feeds may refuse to load over `file://`.** Those cards
-   pull from the internet, and browsers apply stricter rules to pages opened
-   directly from disk.
+2. **The news feed, reflection quote, and This Week card refuse to load over
+   `file://`.** Those cards fetch from the internet or from a sibling file
+   (`tortoise-week.json`), and browsers block that kind of fetch from a page
+   opened directly off disk.
 
-**Recommendation: pick one and stay with it.** For daily use, double-clicking is
-simpler — there is no server to remember to start. Only switch to the `localhost`
-method if the feed cards will not load, and expect to re-enter your settings once
-when you do.
+**Recommendation: use `localhost` (the `starthere` shell function above) for
+daily use.** Double-clicking still works, but silently loses This Week, the
+Creighton feed, and the reflection quote — it will not error, it will just show
+their empty-state messages, which is easy to mistake for something being
+broken. If you do switch between the two methods, expect to re-enter your
+settings once.
 
 ### One-time setup inside the page
 
