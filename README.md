@@ -33,10 +33,9 @@ Set it as your browser homepage or pin the tab.
 | Card | What it does |
 | --- | --- |
 | **Preflight Checklist** | The daily non-negotiables. Checkmarks clear each morning; the items stay. |
-| **Pomodoro** | 25/5 timer with a completed-blocks count for the day. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **Git Preflight** | The pull → status → add → *check nothing secret is staged* → commit → push sequence. Manual reset. |
-| **Daily Intentions** | What I intend to make true today. Appends to a Google Doc. |
+| **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. See [Tortoise Watch sync](#tortoise-watch-sync). |
 | **Moon Shots** | Ideas bigger than a month, so they have a home instead of a sticky note. |
 | **Saying of the Day** | Ignatian reflection feed, with a local quote as offline fallback. |
 | **Creighton Feed** | Campus news via RSS. |
@@ -114,20 +113,22 @@ when you do.
 
 Some cards need a value from you before they work. Enter these directly in the page:
 
-- **Daily Intentions / Moon Shots** — needs a Google Apps Script web app URL that
-  accepts a POST with a `content` field and appends it to a Doc. Paste the `/exec`
-  URL and the Doc URL into the fields on that card.
+- **Moon Shots** — needs a Google Apps Script web app URL that accepts a POST
+  with a `content` field and appends it to a Doc. Paste the `/exec` URL and the
+  Doc URL into the fields on that card.
 - **Daily Briefing** — set a path or URL to whatever you read first.
 - **Creighton Feed** — any RSS or Atom URL.
+- **This Week** — needs nothing in the page. It reads `tortoise-week.json` next
+  to `STARTHERE.html`; see [Tortoise Watch sync](#tortoise-watch-sync).
 
 ---
 
 ## Where your data lives
 
 Everything you type stays in your browser's `localStorage` — but two things do leave
-your machine. The Intentions and Moon Shots you explicitly click Save on POST to
-the Apps Script endpoint you configured. Separately, and without you clicking
-anything, feed URLs are sent to a third-party CORS proxy every time the page loads.
+your machine. Moon Shots you explicitly click Save on POSTs to the Apps Script
+endpoint you configured. Separately, and without you clicking anything, feed URLs
+are sent to a third-party CORS proxy every time the page loads.
 See [Known issues](#known-issues-and-things-to-know-if-you-fork-this).
 
 **That endpoint is never written into this file.** It is entered at runtime and
@@ -137,6 +138,55 @@ fork this, keep it that way.
 
 Clearing your browser data clears your checklists and gratitude log. Anything you
 want to keep, save to the Doc.
+
+---
+
+## Tortoise Watch sync
+
+The **This Week** card is read-only: it displays whatever is flagged `this_week`
+in [Tortoise Watch](https://app.tortoiseplanner.com/). Tortoise has no public REST
+API for a web page to call directly — the only access is the authenticated `Watch`
+MCP connector, which only Claude can use. The pipeline:
+
+1. A **local Cowork scheduled task in Claude Desktop** (same mechanism as the
+   existing daily-brief automation — a cloud routine cannot do this step, because
+   it has no access to your local filesystem and would have to commit the file to
+   this public GitHub repo instead) calls the `Watch` MCP connector's
+   `list_projects` with `this_week: true` each morning, and writes the result to
+   `~/repos/starthere/tortoise-week.json`, overwriting whatever was there. It never
+   commits or pushes; the file stays local.
+2. The file shape:
+   ```json
+   { "generated_at": "2026-09-28T07:00:00-05:00",
+     "projects": [ { "title": "...", "goal": "...", "status": "active" } ] }
+   ```
+   Only `title`, `goal`, `status` per project — drop anything else `list_projects`
+   returns. An empty `projects` array is valid (nothing flagged this week).
+3. `STARTHERE.html` fetches that file on load and lists the projects. If the
+   file is missing, the card says so and points back here.
+
+**Setting up the Cowork task:** in Claude Desktop, create a new scheduled task
+(daily, weekday mornings) with this prompt:
+
+> Call the Watch MCP connector's `list_projects` with `this_week: true`. Write
+> the result to `~/repos/starthere/tortoise-week.json` (overwrite it) as
+> `{"generated_at": "<current ISO 8601 timestamp>", "projects": [{"title","goal","status"}, ...]}`,
+> keeping only those three fields per project. If there are zero projects, still
+> write the file with an empty `projects` array. Do not run any git commands in
+> that repo — this file must never be committed.
+
+This file is **gitignored** — it holds your own project titles, and this repo is
+public. Never remove `tortoise-week.json` from `.gitignore`.
+
+Because the fetch is a same-folder relative request, it is subject to the same
+`file://` restriction as the feed cards below: it works when the page is served
+over `http://localhost`, and may silently fail to load when you double-click the
+file directly. If This Week looks empty, try the localhost method first before
+assuming the sync job did not run.
+
+This is a snapshot, not a live view — it is only as fresh as the last time the
+scheduled job ran, and it shows "this week," not a literal list of today's
+intentions (Tortoise Watch does not expose a daily concept, only weekly).
 
 ---
 

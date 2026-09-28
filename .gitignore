@@ -36,3 +36,6 @@ service-account*.json
 # If you ever externalize the Apps Script endpoint or Doc URL,
 # put it here and keep it out of git.
 local-config.js
+
+# ---- Tortoise Watch snapshot (personal project data, regenerated locally) ----
+tortoise-week.json

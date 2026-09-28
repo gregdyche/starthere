@@ -125,34 +125,6 @@
   .span2 { grid-column: span 2; }
   .full  { grid-column: 1 / -1; }
 
-  /* ---------- Pomodoro: a slim instrument strip, not a card ---------- */
-  .pomo-strip {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 18px;
-  }
-  .pomo-strip .strip-label {
-    font-family: var(--display);
-    font-size: .85rem;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--blue);
-    font-weight: 600;
-    flex: none;
-  }
-  .pomo-strip .mode {
-    font-size: .72rem; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--muted); flex: none;
-  }
-  .pomo-strip .display {
-    font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums;
-    letter-spacing: 1px; flex: none; min-width: 5ch;
-  }
-  .pomo-strip .controls { display: flex; gap: 8px; flex: none; }
-  .pomo-strip .controls .btn { padding: 5px 12px; font-size: .85rem; }
-  .pomo-strip .small { margin-left: auto; }
-
   /* ---------- Preflight: the dominant card ---------- */
   .preflight { border-top: 6px solid var(--gold); }
   body.cleared .preflight { border-top-color: var(--blue); }
@@ -284,8 +256,6 @@
   @media (max-width: 600px) {
     .wrap { grid-template-columns: 1fr; }
     .span2 { grid-column: span 1; }
-    .pomo-strip { flex-wrap: wrap; }
-    .pomo-strip .small { margin-left: 0; }
     .flag h1 { font-size: 1.3rem; letter-spacing: 3px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -309,33 +279,10 @@
 
 <main class="wrap">
 
-  <!-- POMODORO: slim instrument strip across the top -->
-  <section class="card pomo-strip full">
-    <span class="strip-label">Pomodoro</span>
-    <span class="mode" id="pomoMode">Focus</span>
-    <span class="display" id="pomoDisplay">25:00</span>
-    <span class="controls">
-      <button class="btn" id="pomoStart" onclick="pomoToggle()">Start</button>
-      <button class="btn ghost" onclick="pomoReset()">Reset</button>
-      <button class="btn ghost" onclick="pomoSwitch()">Switch</button>
-    </span>
-    <span class="small">Focus 25 / Break 5 &middot; Completed today: <span id="pomoCount">0</span></span>
-  </section>
-
-  <!-- DAILY INTENTIONS -> Google Doc -->
+  <!-- THIS WEEK -> read-only snapshot from Tortoise Watch -->
   <section class="card span2">
-    <h2>Daily Intentions <a class="iconbtn" id="docLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
-    <textarea id="intentions" placeholder="What do I intend to make true today? Save appends to your Google Doc."></textarea>
-    <div class="check-add">
-      <button class="btn" id="intentSave" onclick="saveIntentions()">Save to Google Doc</button>
-      <span class="small" id="intentStatus" style="align-self:center"></span>
-    </div>
-    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
-    <div class="rss-cfg">
-      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
-      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
-      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
-    </div>
+    <h2>This Week <span class="reset-note" id="tortoiseStatus"></span> <a class="iconbtn" href="https://app.tortoiseplanner.com/" target="_blank" style="text-decoration:none">Open Tortoise</a></h2>
+    <ul class="grat-list" id="tortoiseList"></ul>
   </section>
 
   <!-- GRATITUDE -->
@@ -408,6 +355,12 @@
   <section class="card">
     <h2>Moon Shots <a class="iconbtn" id="somedayLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
     <textarea id="moonshots" placeholder="Big ideas that take more than a month. Save appends to your 'Someday Maybe' Google Doc."></textarea>
+    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
+    <div class="rss-cfg">
+      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
+      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
+      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
+    </div>
     <div class="check-add">
       <button class="btn" id="moonSave" onclick="saveMoonshots()">Save to Someday Maybe</button>
       <span class="small" id="moonStatus" style="align-self:center"></span>
@@ -518,38 +471,11 @@ function refreshDocConfig(){
   const ep = LS.get('docEndpoint',''), du = LS.get('docUrl','');
   document.getElementById('docEndpointInput').value = ep;
   document.getElementById('docUrlInput').value = du;
-  const link = document.getElementById('docLink');
+  const link = document.getElementById('somedayLink');
   link.setAttribute('href', safeUrl(du));
   link.style.display = du ? '' : 'none';
 }
 refreshDocConfig();
-
-/* ---------- daily intentions -> Google Doc ---------- */
-const intentBox = document.getElementById('intentions');
-intentBox.value = LS.get('intentions', '');
-intentBox.addEventListener('input', () => LS.set('intentions', intentBox.value));
-function saveIntentions(){
-  const status = document.getElementById('intentStatus');
-  const btn = document.getElementById('intentSave');
-  const text = intentBox.value.trim();
-  if(!text){ status.textContent = 'Nothing to save.'; return; }
-  const ep = docEndpoint();
-  if(!ep){ status.textContent = 'No endpoint set. Add one below.'; return; }
-  const stamp = new Date().toLocaleString();
-  status.textContent = 'Saving...';
-  btn.disabled = true;
-  // Note: no-cors makes the response opaque; "Sent" means the request was
-  // dispatched, not that the Apps Script confirmed receipt.
-  fetch(ep, {
-    method: 'POST',
-    mode: 'no-cors',
-    cache: 'no-cache',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ content: `[${stamp}]\n${text}` })
-  })
-  .then(() => { status.textContent = 'Sent to Google Doc.'; btn.disabled = false; })
-  .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
-}
 
 /* ---------- moon shots -> Someday Maybe Doc ---------- */
 const moonBox = document.getElementById('moonshots');
@@ -683,44 +609,6 @@ function addFreqItem(){
 }
 renderFreq();
 
-/* ---------- pomodoro ---------- */
-let pomo = { mode:'focus', secs:25*60, running:false, timer:null };
-const FOCUS=25*60, BREAK=5*60;
-function fmt(s){ const m=Math.floor(s/60), x=s%60; return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; }
-function renderPomo(){
-  document.getElementById('pomoDisplay').textContent = fmt(pomo.secs);
-  document.getElementById('pomoMode').textContent = pomo.mode==='focus'?'Focus':'Break';
-  document.getElementById('pomoStart').textContent = pomo.running?'Pause':'Start';
-  let c = LS.get('pomoCount', {date:todayKey(), n:0});
-  if(c.date!==todayKey()){ c={date:todayKey(),n:0}; LS.set('pomoCount',c); }
-  document.getElementById('pomoCount').textContent = c.n;
-}
-function pomoToggle(){
-  if(pomo.running){ clearInterval(pomo.timer); pomo.running=false; }
-  else {
-    pomo.running=true;
-    pomo.timer=setInterval(()=>{
-      pomo.secs--;
-      if(pomo.secs<=0){
-        clearInterval(pomo.timer); pomo.running=false;
-        if(pomo.mode==='focus'){
-          let c=LS.get('pomoCount',{date:todayKey(),n:0});
-          if(c.date!==todayKey())c={date:todayKey(),n:0};
-          c.n++; LS.set('pomoCount',c);
-        }
-        try{ new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play(); }catch(e){}
-        alert(pomo.mode==='focus'?'Focus block done. Take a break.':'Break over. Back to it.');
-        pomoSwitch();
-      }
-      renderPomo();
-    },1000);
-  }
-  renderPomo();
-}
-function pomoReset(){ clearInterval(pomo.timer); pomo.running=false; pomo.secs=pomo.mode==='focus'?FOCUS:BREAK; renderPomo(); }
-function pomoSwitch(){ clearInterval(pomo.timer); pomo.running=false; pomo.mode=pomo.mode==='focus'?'break':'focus'; pomo.secs=pomo.mode==='focus'?FOCUS:BREAK; renderPomo(); }
-renderPomo();
-
 /* ---------- daily briefing link ---------- */
 function refreshBriefing(){
   const p = LS.get('briefingPath','');
@@ -832,6 +720,38 @@ async function loadRSS(){
   }
 }
 loadRSS();
+
+/* ---------- this week: read-only snapshot from Tortoise Watch ----------
+   tortoise-week.json is written locally by a scheduled Claude job, is
+   gitignored, and is never fetched from anywhere but this same folder. */
+async function loadTortoiseWeek(){
+  const status = document.getElementById('tortoiseStatus');
+  const list = document.getElementById('tortoiseList');
+  try {
+    const res = await fetch('tortoise-week.json', { cache: 'no-store' });
+    if(!res.ok) throw new Error('no snapshot file');
+    const data = await res.json();
+    const items = data.projects || [];
+    list.innerHTML = '';
+    if(!items.length){
+      list.innerHTML = '<li class="small">Nothing flagged for this week in Tortoise Watch.</li>';
+    } else {
+      items.forEach(p=>{
+        const li=document.createElement('li');
+        const meta=[p.goal, p.status].filter(Boolean).join(' &middot; ');
+        li.innerHTML=`<span>${escapeHtml(p.title||'Untitled')}${meta?` <span class="small">(${meta})</span>`:''}</span>`;
+        list.appendChild(li);
+      });
+    }
+    status.textContent = data.generated_at
+      ? `as of ${new Date(data.generated_at).toLocaleString()}`
+      : '';
+  } catch(e){
+    list.innerHTML = '<li class="small">No snapshot yet. Serve this page over localhost and run the Tortoise sync job (see README).</li>';
+    status.textContent = '';
+  }
+}
+loadTortoiseWeek();
 
 /* ---------- util ---------- */
 function safeUrl(u){
