@@ -32,7 +32,8 @@ Set it as your browser homepage or pin the tab.
 
 | Card | What it does |
 | --- | --- |
-| **Preflight Checklist** | The daily non-negotiables. Checkmarks clear each morning; the items stay. |
+| **Preflight Checklist** | The daily non-negotiables. The list lives in `checklist.json` (git-tracked); checkmarks live in the browser and clear each morning. See [The checklist is code](#the-checklist-is-code). |
+| **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **Git Preflight** | The pull → status → add → *check nothing secret is staged* → commit → push sequence. Manual reset. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. See [Tortoise Watch sync](#tortoise-watch-sync). |
@@ -60,7 +61,7 @@ file. The easiest way to do that is a one-line shell function:
 starthere() {
   cd ~/repos/starthere || return
   if ! lsof -i :8000 -sTCP:LISTEN >/dev/null 2>&1; then
-    python3 -m http.server 8000 >/dev/null 2>&1 &
+    python3 serve.py >/dev/null 2>&1 &
     disown
   fi
   open "http://localhost:8000/STARTHERE.html"
@@ -68,7 +69,21 @@ starthere() {
 ```
 
 Then running `starthere` from any terminal starts (or reuses) the local
-server and opens the page. Everything you type stays in your own browser
+server and opens the page.
+
+The server is `serve.py`, a few lines over Python's built-in `http.server`
+with two additions: it listens on `127.0.0.1` only (plain `python3 -m
+http.server` listens on every interface, so anyone on the same Wi-Fi could
+read the repo folder, `tortoise-week.json` included), and it accepts
+`POST /shutdown`, which the **Kill proc** button in the banner sends. The
+button only appears when the page is served from localhost; the endpoint
+rejects requests whose Host or Origin is not `localhost:8000` /
+`127.0.0.1:8000`, so another website cannot stop it.
+
+**How long the server lives:** `disown` detaches it from the terminal, so
+closing the window does not stop it, and `jobs` will not list it. It runs
+until you click Kill proc, log out, or restart. To check whether it is up:
+`lsof -i :8000 -sTCP:LISTEN`. Everything you type stays in your own browser
 (localStorage); nothing leaves your machine, which is also why you want a
 local copy rather than the demo link.
 
@@ -105,11 +120,11 @@ When you double-click the file, your browser loads it from an address starting w
 
 There is a second way. You can run a small program on your own computer that hands
 the file to the browser the way a website would, and then the address starts with
-`http://localhost`. Running that server exposes nothing to the network — "localhost"
+`http://localhost`. Running `serve.py` exposes nothing to the network — "localhost"
 just means "this computer talking to itself."
 
 ```bash
-python3 -m http.server 8000
+python3 serve.py
 # then visit http://localhost:8000/STARTHERE.html
 ```
 
@@ -131,6 +146,35 @@ Creighton feed, and the reflection quote — it will not error, it will just sho
 their empty-state messages, which is easy to mistake for something being
 broken. If you do switch between the two methods, expect to re-enter your
 settings once.
+
+### The checklist is code
+
+Pilots and surgeons keep the master checklist separate from the copy they run
+today, and they fix the master the moment a step turns out to be missing. The
+page does the same:
+
+- **Master list:** `checklist.json` in this repo, one item per line, under
+  git. Its history is the history of the routine.
+- **Today's run:** the checkmarks, kept in the browser and cleared each morning.
+- **Fixing it:** the Add and × buttons write `checklist.json` through
+  `serve.py` (`PUT /checklist.json`, same localhost-only guard as Kill proc,
+  max 30 items of 200 characters). Then `git diff` shows the change; commit it
+  like any other edit. Editing the file by hand works too; reload the page.
+- **Keep it short.** A real checklist holds the killer items only, the ones
+  skipped often enough to hurt. Four or five, not twenty.
+
+Over `file://` or on the GitHub Pages demo the server is not there to write the
+file, so the list falls back to that browser's storage, as before.
+
+First load after this change copies a list that used to live only in the
+browser into `checklist.json`, once. **This repo is public:** anything in
+`checklist.json` is public when pushed, so keep private items out of it.
+
+If the Kill proc button says "Not serve.py" or the list says "not saved", an
+old plain `python3 -m http.server` is answering instead (usually started from
+a terminal that still has the pre-serve.py `starthere` function loaded). Check
+with `lsof -nP -i :8000 -sTCP:LISTEN`, stop the `http.server` one, and run
+`source ~/.zshrc` in old terminals.
 
 ### One-time setup inside the page
 

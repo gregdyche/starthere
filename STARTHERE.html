@@ -91,6 +91,20 @@
   .clock { text-align: right; flex: none; }
   .clock .time { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .clock .date { font-size: .8rem; opacity: .9; }
+  .killproc {
+    flex: none;
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.6);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: .75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .killproc:hover { background: rgba(255,255,255,.15); }
+  .killproc:disabled { opacity: .6; cursor: default; }
 
   /* ---------- Grid ---------- */
   .wrap {
@@ -275,6 +289,8 @@
     <div class="time" id="clock">--:--</div>
     <div class="date" id="todayDate"></div>
   </div>
+  <button class="killproc" id="killProc" type="button" hidden
+          title="Stop the local server (serve.py). Run starthere to start it again.">Kill proc</button>
 </header>
 
 <main class="wrap">
@@ -397,7 +413,25 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 
-/* ---------- preflight checklist (resets daily) ---------- */
+/* ---------- kill proc: stops serve.py (localhost only) ---------- */
+(function(){
+  const btn = document.getElementById('killProc');
+  if (location.protocol !== 'http:' || !['localhost','127.0.0.1'].includes(location.hostname)) return;
+  btn.hidden = false;
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    try {
+      const r = await fetch('/shutdown', {method:'POST'});
+      btn.textContent = r.ok ? 'Server stopped' : 'Not serve.py';
+    } catch { btn.textContent = 'Already stopped'; }
+  });
+})();
+
+/* ---------- preflight checklist ----------
+   The master list lives in checklist.json in the repo, so it has git history.
+   The browser keeps only today's checkmarks, which clear each morning.
+   Add and delete write the file through serve.py (localhost only); anywhere
+   else (file://, GitHub Pages) the list falls back to this browser's storage. */
 const DEFAULT_CHECKS = [
   "OneDrive is syncing",
   "Calendar reviewed",
@@ -405,40 +439,86 @@ const DEFAULT_CHECKS = [
   "Daily briefing read",
   "Phone on Do Not Disturb"
 ];
-function loadChecks() {
-  let data = LS.get('checks', null);
-  if (!data) {
-    data = { date: todayKey(), items: DEFAULT_CHECKS.map(t => ({t, done:false})) };
-    LS.set('checks', data);
-  } else if (data.date !== todayKey()) {
-    data.date = todayKey();
-    data.items = data.items.map(it => ({ t: it.t, done: false })); // keep items, clear checkmarks
-    LS.set('checks', data);
+const CHECKLIST_EDITABLE = location.protocol === 'http:' &&
+  ['localhost','127.0.0.1'].includes(location.hostname);
+let MASTER = [];
+let masterFromFile = false;
+let masterNote = '';
+
+async function loadMaster() {
+  try {
+    const r = await fetch('checklist.json', {cache:'no-store'});
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    if (!Array.isArray(j.items)) throw new Error();
+    MASTER = j.items.filter(t => typeof t === 'string');
+    masterFromFile = true;
+  } catch { masterFromFile = false; }
+
+  // One-time move of the list that used to live only in this browser.
+  const legacy = LS.get('checks', null);
+  if (legacy && Array.isArray(legacy.items) && !LS.get('checksMigrated', false)) {
+    const old = legacy.items.map(x => x.t);
+    if (legacy.date === todayKey())
+      LS.set('checksDone', { date: todayKey(), done: legacy.items.filter(x => x.done).map(x => x.t) });
+    if (masterFromFile && CHECKLIST_EDITABLE) {
+      if (JSON.stringify(old) !== JSON.stringify(MASTER)) { MASTER = old; await saveMaster(); }
+      LS.set('checksMigrated', true);
+    } else if (!masterFromFile) {
+      LS.set('checksMaster', old);
+    }
   }
-  return data;
+  if (!masterFromFile) MASTER = LS.get('checksMaster', null) || DEFAULT_CHECKS.slice();
+}
+async function saveMaster() {
+  if (masterFromFile && CHECKLIST_EDITABLE) {
+    try {
+      const r = await fetch('checklist.json', {
+        method: 'PUT', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ items: MASTER })
+      });
+      masterNote = r.ok ? '' : ' - not saved (restart with starthere)';
+    } catch { masterNote = ' - not saved, server stopped'; }
+  } else {
+    LS.set('checksMaster', MASTER);
+  }
+}
+function loadDone() {
+  let d = LS.get('checksDone', null);
+  if (!d || d.date !== todayKey() || !Array.isArray(d.done)) {
+    d = { date: todayKey(), done: [] };
+    LS.set('checksDone', d);
+  }
+  return d;
 }
 function renderChecks() {
-  const data = loadChecks();
+  const done = new Set(loadDone().done);
   const box = document.getElementById('checklist');
   box.innerHTML = '';
-  data.items.forEach((it, i) => {
+  MASTER.forEach((t, i) => {
+    const isDone = done.has(t);
     const row = document.createElement('div');
-    row.className = 'check-item' + (it.done ? ' done' : '');
-    row.innerHTML = `<input type="checkbox" ${it.done?'checked':''} onchange="toggleCheck(${i})">
-      <label onclick="toggleCheck(${i})">${escapeHtml(it.t)}</label>
+    row.className = 'check-item' + (isDone ? ' done' : '');
+    row.innerHTML = `<input type="checkbox" ${isDone?'checked':''} onchange="toggleCheck(${i})">
+      <label onclick="toggleCheck(${i})">${escapeHtml(t)}</label>
       <button class="x" onclick="delCheck(${i})">&times;</button>`;
     box.appendChild(row);
   });
-  const done = data.items.filter(x=>x.done).length;
+  const n = MASTER.filter(t => done.has(t)).length;
+  const src = masterFromFile ? 'list in checklist.json' : 'list in this browser';
   document.getElementById('checkStatus').textContent =
-    `${done}/${data.items.length} cleared - resets daily`;
-  updateFlightState(done, data.items.length);
+    `${n}/${MASTER.length} cleared - resets daily - ${src}${masterNote}`;
+  updateFlightState(n, MASTER.length);
 }
-function toggleCheck(i){ const d=loadChecks(); d.items[i].done=!d.items[i].done; LS.set('checks',d); renderChecks(); }
-function delCheck(i){ const d=loadChecks(); d.items.splice(i,1); LS.set('checks',d); renderChecks(); }
-function addCheckItem(){
-  const inp=document.getElementById('newCheckItem'); const t=inp.value.trim(); if(!t)return;
-  const d=loadChecks(); d.items.push({t,done:false}); LS.set('checks',d); inp.value=''; renderChecks();
+function toggleCheck(i) {
+  const d = loadDone(); const t = MASTER[i];
+  d.done = d.done.includes(t) ? d.done.filter(x => x !== t) : [...d.done, t];
+  LS.set('checksDone', d); renderChecks();
+}
+async function delCheck(i) { MASTER.splice(i, 1); await saveMaster(); renderChecks(); }
+async function addCheckItem() {
+  const inp = document.getElementById('newCheckItem'); const t = inp.value.trim(); if (!t) return;
+  MASTER.push(t); inp.value = ''; await saveMaster(); renderChecks();
 }
 
 /* ---------- flight state: the tag clears when the preflight does ---------- */
@@ -458,7 +538,7 @@ function updateFlightState(done, total){
     ribbon.appendChild(seg);
   }
 }
-renderChecks();
+loadMaster().then(renderChecks);
 
 /* ---------- doc config (stored in this browser, never in the file) ---------- */
 function docEndpoint(){ return LS.get('docEndpoint', ''); }
