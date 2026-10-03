@@ -193,6 +193,17 @@
   }
   .check-item .x:hover { color: var(--blue); }
 
+  /* ---------- Checklists library (search over the Stacks index) ---------- */
+  .cl-search { display: flex; gap: 6px; margin-bottom: 8px; }
+  .cl-search input { flex: 1; }
+  .cl-list { list-style: none; margin: 0; padding: 0; font-size: .9rem; columns: 2 420px; column-gap: 28px; }
+  .cl-list li { padding: 7px 0; border-bottom: 1px dashed var(--line); break-inside: avoid; }
+  .cl-list .cl-title { font-weight: 600; background: none; border: none; padding: 0; color: var(--blue); cursor: pointer; font: inherit; text-align: left; }
+  .cl-list .cl-title:hover { text-decoration: underline; }
+  .cl-list .cl-title:disabled { color: var(--muted); cursor: default; text-decoration: none; }
+  .cl-list .stale { color: var(--gold-deep); font-weight: 600; }
+  .cl-list .snip { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
   /* Inline command hints (Git Preflight) */
   .cmd {
     display: inline-block;
@@ -339,6 +350,16 @@
       <input type="text" id="briefingPath" placeholder="~/Documents/daily-brief.md">
       <button class="btn ghost" onclick="saveBriefing()">Set</button>
     </div>
+  </section>
+
+  <!-- CHECKLISTS -> search over stacks/CHECKLISTS.md, served by serve.py -->
+  <section class="card full">
+    <h2>Checklists <span class="reset-note" id="clStatus"></span></h2>
+    <div class="cl-search">
+      <input type="text" id="clQuery" placeholder="Search checklists: grading, rollover, new repo..." oninput="clSearchSoon()" onkeydown="if(event.key==='Enter')clOpenTop()">
+    </div>
+    <ul class="cl-list" id="clList"></ul>
+    <div class="small" style="margin-top:8px">Click a title to open it. Used one and something was missing? Fix the checklist now, before you close it. Not listed? Add it to CHECKLISTS.md in the Stacks.</div>
   </section>
 
   <!-- FREQUENT COMMANDS -->
@@ -832,6 +853,49 @@ async function loadTortoiseWeek(){
   }
 }
 loadTortoiseWeek();
+
+/* ---------- checklists: search over the Stacks index ----------
+   serve.py reads stacks/CHECKLISTS.md through the Stacks repo's own reader
+   (tools/checklists.py). Nothing here is stored in this public repo. */
+let CL_ITEMS = [], clTimer = null;
+function clSearchSoon(){ clearTimeout(clTimer); clTimer = setTimeout(loadChecklists, 200); }
+async function loadChecklists(){
+  const status = document.getElementById('clStatus');
+  const list = document.getElementById('clList');
+  const q = document.getElementById('clQuery').value.trim();
+  try {
+    const res = await fetch('/checklists?q=' + encodeURIComponent(q), { cache: 'no-store' });
+    if(!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    CL_ITEMS = data.items || [];
+    list.innerHTML = '';
+    if(!CL_ITEMS.length){
+      list.innerHTML = `<li class="small">No checklist matches "${escapeHtml(q)}".</li>`;
+    }
+    CL_ITEMS.forEach(it=>{
+      const li = document.createElement('li');
+      const age = !it.exists ? '<span class="stale">missing</span>'
+        : it.stale ? `<span class="stale">stale, ${it.age_days}d</span>`
+        : `revised ${escapeHtml(it.revised)}`;
+      li.innerHTML = `<button class="cl-title" ${it.exists?'':'disabled'} onclick="clOpen(${Number(it.id)})">${escapeHtml(it.title)}</button>
+        <span class="small"> &middot; ${escapeHtml(it.type)} &middot; ${age}</span>
+        <span class="small" style="display:block">Run: ${escapeHtml(it.when)}</span>
+        ${q && it.snippet ? `<span class="snip">${escapeHtml(it.snippet)}</span>` : ''}`;
+      list.appendChild(li);
+    });
+    const stale = CL_ITEMS.filter(i=>i.stale || !i.exists).length;
+    status.textContent = `${CL_ITEMS.length} ${q?'match':'listed'}${CL_ITEMS.length===1?'':(q?'es':'')}` + (stale?` · ${stale} need a look (>${data.stale_days}d)`:'');
+  } catch(e){
+    list.innerHTML = '<li class="small">Checklist search needs serve.py and the Stacks repo on this Mac (see README).</li>';
+    status.textContent = '';
+  }
+}
+async function clOpen(id){
+  try { await fetch('/checklists/open', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) }); }
+  catch(e){}
+}
+function clOpenTop(){ const t = CL_ITEMS.find(i=>i.exists); if(t) clOpen(t.id); }
+loadChecklists();
 
 /* ---------- util ---------- */
 function safeUrl(u){

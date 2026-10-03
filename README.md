@@ -33,6 +33,7 @@ Set it as your browser homepage or pin the tab.
 | Card | What it does |
 | --- | --- |
 | **Preflight Checklist** | The daily non-negotiables. The list lives in `checklist.json` (git-tracked); checkmarks live in the browser and clear each morning. See [The checklist is code](#the-checklist-is-code). |
+| **Checklists** | Search box over every checklist you operate from, wherever it lives, with stale ones flagged. Reads a private index in another repo; nothing is stored here. See [Checklists card](#checklists-card). |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **Git Preflight** | The pull → status → add → *check nothing secret is staged* → commit → push sequence. Manual reset. |
@@ -175,6 +176,31 @@ old plain `python3 -m http.server` is answering instead (usually started from
 a terminal that still has the pre-serve.py `starthere` function loaded). Check
 with `lsof -nP -i :8000 -sTCP:LISTEN`, stop the `http.server` one, and run
 `source ~/.zshrc` in old terminals.
+
+### Checklists card
+
+The Preflight card is one checklist. This card is the front door to all the
+others: grading, class prep, semester rollover, new repo, and so on. They live
+next to the work they belong to (each repo's `checklist/` or `docs/`), which
+makes them hard to find, so one index lists them all.
+
+- **The index is not in this repo.** It is `stacks/CHECKLISTS.md` in a private
+  Stacks repo, one line per checklist: title, path, type (read-do, do-confirm,
+  tracker), and when to run it. This repo is public; keep it that way.
+- **`serve.py` does the reading.** `GET /checklists?q=...` loads the Stacks
+  repo's own reader (`tools/checklists.py`; override the folder with the
+  `STACKS_TOOLS` environment variable) and returns matches by title, run-when,
+  path, and full text, with the last-revised date (last commit, or file date)
+  and a stale flag past 90 days. Host-checked like the other endpoints.
+- **Opening one:** click its title, or press Enter to open the top match.
+  `POST /checklists/open` takes the item's index number, never a path, so the
+  page can only open files the index lists. Same localhost guard as Kill proc.
+- **The same search in a terminal:** `cl grading`, `cl grading -o` to open.
+- **Without the Stacks repo** (or over `file://`, or on the demo) the card
+  says so and the rest of the page works as before.
+
+The habit the card is there for: use a checklist, and if a step was missing or
+wrong, fix the checklist before you close it.
 
 ### One-time setup inside the page
 
