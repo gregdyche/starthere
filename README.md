@@ -195,7 +195,13 @@ makes them hard to find, so one index lists them all.
 - **Opening one:** click its title, or press Enter to open the top match.
   `POST /checklists/open` takes the item's index number, never a path, so the
   page can only open files the index lists. Same localhost guard as Kill proc.
-- **The same search in a terminal:** `cl grading`, `cl grading -o` to open.
+- **GitHub links:** a checklist in a repo with a GitHub remote also gets a
+  GitHub link (rendered, with copy buttons on code blocks). GitHub shows the
+  last pushed version, so the card warns "GitHub is behind this Mac: push" or
+  "GitHub is newer: pull before editing here". Edit on the Mac; if you edit
+  on GitHub, pull before touching the file locally.
+- **The same search in a terminal:** `cl grading`, `cl grading -o` to open,
+  `cl grading -g` to open on GitHub.
 - **Without the Stacks repo** (or over `file://`, or on the demo) the card
   says so and the rest of the page works as before.
 

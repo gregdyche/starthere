@@ -30,7 +30,8 @@ LOCAL_ORIGINS = {f"http://{h}" for h in LOCAL_HOSTS}
 STACKS_TOOLS = os.environ.get("STACKS_TOOLS", os.path.expanduser("~/repos/stacks/tools"))
 # Fields the page needs; the absolute path stays on the server.
 PUBLIC_FIELDS = ("id", "title", "path", "type", "when", "section", "exists",
-                 "revised", "age_days", "stale", "snippet")
+                 "revised", "age_days", "stale", "snippet",
+                 "github_url", "ahead", "behind", "dirty")
 
 
 def _checklists():
