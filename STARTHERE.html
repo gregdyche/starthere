@@ -140,7 +140,8 @@
   .full  { grid-column: 1 / -1; }
 
   /* ---------- Preflight: one column, gold top rule ---------- */
-  .preflight { border-top: 6px solid var(--gold); }
+  /* Top right, running down beside This Week and the row under it */
+  .preflight { border-top: 6px solid var(--gold); grid-row: span 2; }
   body.cleared .preflight { border-top-color: var(--blue); }
   .preflight h2 { font-size: 1.05rem; }
   .preflight h2 .badge {
@@ -281,6 +282,7 @@
   @media (max-width: 600px) {
     .wrap { grid-template-columns: 1fr; }
     .span2 { grid-column: span 1; }
+    .preflight { grid-row: auto; }
     .flag h1 { font-size: 1.3rem; letter-spacing: 3px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -312,17 +314,6 @@
     <ul class="grat-list" id="tortoiseList"></ul>
   </section>
 
-  <!-- GRATITUDE -->
-  <section class="card">
-    <h2>Gratitude</h2>
-    <div class="check-add">
-      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
-      <button class="btn" onclick="addGrat()">Add</button>
-    </div>
-    <ul class="grat-list" id="gratList"></ul>
-    <div class="small" id="gratNote" style="margin-top:8px"></div>
-  </section>
-
   <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
   <section class="card preflight">
     <h2>Preflight Checklist
@@ -335,6 +326,17 @@
       <input type="text" id="newCheckItem" placeholder="Add a check item">
       <button class="btn" onclick="addCheckItem()">Add</button>
     </div>
+  </section>
+
+  <!-- GRATITUDE -->
+  <section class="card">
+    <h2>Gratitude</h2>
+    <div class="check-add">
+      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
+      <button class="btn" onclick="addGrat()">Add</button>
+    </div>
+    <ul class="grat-list" id="gratList"></ul>
+    <div class="small" id="gratNote" style="margin-top:8px"></div>
   </section>
 
   <!-- QUICK LINKS -->
