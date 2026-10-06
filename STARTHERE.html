@@ -206,21 +206,6 @@
   .cl-list .stale { color: var(--gold-deep); font-weight: 600; }
   .cl-list .snip { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  /* Inline command hints (Git Preflight) */
-  .cmd {
-    display: inline-block;
-    margin-left: 10px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: .78rem;
-    background: #f6f4ee;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    padding: 1px 7px;
-    color: var(--navy);
-    text-decoration: none;
-  }
-  .check-item.done .cmd { opacity: .45; text-decoration: none; }
-
   input[type=text], textarea, .btn {
     font: inherit;
     border: 1px solid var(--line);
@@ -351,26 +336,6 @@
     <div class="rss-cfg">
       <input type="text" id="briefingPath" placeholder="~/Documents/daily-brief.md">
       <button class="btn ghost" onclick="saveBriefing()">Set</button>
-    </div>
-  </section>
-
-  <!-- FREQUENT COMMANDS -->
-  <section class="card">
-    <h2>Frequent Commands <span class="reset-note">click to copy</span></h2>
-    <div id="freqList"></div>
-    <div class="check-add">
-      <input type="text" id="newFreqCmd" placeholder="Add a command" onkeydown="if(event.key==='Enter')addFreqItem()">
-      <button class="btn" onclick="addFreqItem()">Add</button>
-    </div>
-  </section>
-
-  <!-- GIT PREFLIGHT -->
-  <section class="card span2">
-    <h2>Git Preflight <span class="reset-note" id="gitStatus"></span> <button class="iconbtn" onclick="resetGitChecks()">Reset</button></h2>
-    <div id="gitChecklist"></div>
-    <div class="check-add">
-      <input type="text" id="newGitItem" placeholder="Add a step" onkeydown="if(event.key==='Enter')addGitCheckItem()">
-      <button class="btn" onclick="addGitCheckItem()">Add</button>
     </div>
   </section>
 
@@ -603,113 +568,6 @@ function saveMoonshots(){
   .then(() => { status.textContent = 'Sent to Someday Maybe.'; btn.disabled = false; })
   .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
 }
-
-/* ---------- git preflight (manual reset) ---------- */
-const DEFAULT_GIT_CHECKS = [
-  { t:"", c:"git pull" },
-  { t:"", c:"git status" },
-  { t:"", c:"git add ." },
-  { t:"no .env / venv / keys staged", c:"" },
-  { t:"", c:"git commit -m \"msg\"" },
-  { t:"", c:"git push" },
-  { t:"check github.com", c:"" }
-];
-function loadGitChecks(){
-  let d = LS.get('gitChecks2', null);
-  if(!d || !Array.isArray(d.items)){
-    d = { items: DEFAULT_GIT_CHECKS.map(x => ({ t:x.t, c:x.c, done:false })) };
-    LS.set('gitChecks2', d);
-  }
-  return d;
-}
-function copyGitCmd(i){
-  const d = loadGitChecks();
-  navigator.clipboard.writeText(d.items[i].c).then(() => {
-    const el = document.getElementById('gitCmd'+i);
-    const old = el.textContent;
-    el.textContent = 'copied';
-    setTimeout(() => { el.textContent = old; }, 800);
-  });
-}
-function renderGitChecks(){
-  const d = loadGitChecks();
-  const box = document.getElementById('gitChecklist');
-  box.innerHTML = '';
-  d.items.forEach((it, i) => {
-    const row = document.createElement('div');
-    row.className = 'check-item' + (it.done ? ' done' : '');
-    row.innerHTML = `<input type="checkbox" ${it.done?'checked':''} onchange="toggleGitCheck(${i})">
-      <label>${escapeHtml(it.t)}${it.c?`<span class="cmd" id="gitCmd${i}" style="cursor:pointer;margin-left:${it.t?'10px':'0'}" title="Click to copy" onclick="copyGitCmd(${i})">${escapeHtml(it.c)}</span>`:''}</label>
-      <button class="x" onclick="delGitCheck(${i})">&times;</button>`;
-    box.appendChild(row);
-  });
-  const done = d.items.filter(x => x.done).length;
-  document.getElementById('gitStatus').textContent =
-    `${done}/${d.items.length} cleared - reset when you start a new session`;
-}
-function toggleGitCheck(i){ const d=loadGitChecks(); d.items[i].done=!d.items[i].done; LS.set('gitChecks2',d); renderGitChecks(); }
-function delGitCheck(i){ const d=loadGitChecks(); d.items.splice(i,1); LS.set('gitChecks2',d); renderGitChecks(); }
-function addGitCheckItem(){
-  const inp=document.getElementById('newGitItem'); const t=inp.value.trim(); if(!t)return;
-  const d=loadGitChecks(); d.items.push({t:'',c:t,done:false}); LS.set('gitChecks2',d); inp.value=''; renderGitChecks();
-}
-function resetGitChecks(){
-  const d=loadGitChecks();
-  d.items=d.items.map(x=>({t:x.t,c:x.c,done:false}));
-  LS.set('gitChecks2',d); renderGitChecks();
-}
-renderGitChecks();
-
-/* ---------- frequent commands (persistent, editable) ---------- */
-const DEFAULT_FREQ = [
-  { t:"", c:"launchctl list | grep leadgen" },
-  { t:"", c:"launchctl print gui/$(id -u)/com.leadgen.snapshot" },
-  { t:"", c:"tail -20 ~/Library/Logs/leadgen-snapshot.log" },
-  { t:"", c:"source .venv/bin/activate" },
-  { t:"", c:"deactivate" },
-  { t:"", c:"python3 -m venv .venv" }
-];
-function loadFreq(){
-  let d = LS.get('freqCmds2', null);
-  if(!d || !Array.isArray(d.items)){
-    d = { items: DEFAULT_FREQ.map(x => ({ t:x.t, c:x.c })) };
-    LS.set('freqCmds2', d);
-  }
-  return d;
-}
-function renderFreq(){
-  const d = loadFreq();
-  const box = document.getElementById('freqList');
-  box.innerHTML = '';
-  d.items.forEach((it, i) => {
-    const row = document.createElement('div');
-    row.className = 'check-item';
-    row.innerHTML = `<label>${escapeHtml(it.t)}${it.c?`<span class="cmd" id="freqCmd${i}" style="cursor:pointer;margin-left:${it.t?'10px':'0'};word-break:break-all" title="Click to copy" onclick="copyFreq(${i})">${escapeHtml(it.c)}</span>`:''}</label>
-      <button class="x" onclick="delFreq(${i})">&times;</button>`;
-    box.appendChild(row);
-  });
-}
-function copyFreq(i){
-  const d = loadFreq();
-  navigator.clipboard.writeText(d.items[i].c).then(() => {
-    const el = document.getElementById('freqCmd'+i);
-    const old = el.textContent;
-    el.textContent = 'copied';
-    setTimeout(() => { el.textContent = old; }, 800);
-  });
-}
-function delFreq(i){ const d=loadFreq(); d.items.splice(i,1); LS.set('freqCmds2',d); renderFreq(); }
-function addFreqItem(){
-  const c=document.getElementById('newFreqCmd');
-  const cmd=c.value.trim();
-  if(!cmd) return;
-  const d=loadFreq();
-  d.items.push({ t:'', c: cmd });
-  LS.set('freqCmds2', d);
-  c.value='';
-  renderFreq();
-}
-renderFreq();
 
 /* ---------- daily briefing link ---------- */
 function refreshBriefing(){
