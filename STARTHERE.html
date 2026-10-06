@@ -139,7 +139,7 @@
   .span2 { grid-column: span 2; }
   .full  { grid-column: 1 / -1; }
 
-  /* ---------- Preflight: the dominant card ---------- */
+  /* ---------- Preflight: one column, gold top rule ---------- */
   .preflight { border-top: 6px solid var(--gold); }
   body.cleared .preflight { border-top-color: var(--blue); }
   .preflight h2 { font-size: 1.05rem; }
@@ -324,7 +324,7 @@
   </section>
 
   <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
-  <section class="card span2 preflight">
+  <section class="card preflight">
     <h2>Preflight Checklist
       <span class="badge">Cleared</span>
       <span class="reset-note" id="checkStatus"></span>
@@ -456,9 +456,7 @@ setInterval(tick, 1000); tick();
 const DEFAULT_CHECKS = [
   "OneDrive is syncing",
   "Calendar reviewed",
-  "Toggl timer started",
-  "Daily briefing read",
-  "Phone on Do Not Disturb"
+  "Daily briefing read"
 ];
 const CHECKLIST_EDITABLE = location.protocol === 'http:' &&
   ['localhost','127.0.0.1'].includes(location.hostname);
