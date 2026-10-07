@@ -191,11 +191,14 @@ makes them hard to find, so one index lists them all.
   `STACKS_TOOLS` environment variable) and returns matches by title, run-when,
   path, and full text, with the last-revised date (last commit, or file date)
   and a stale flag past 90 days. Host-checked like the other endpoints.
-- **Opening one:** click its title, or press Enter to open the top match.
-  `POST /checklists/open` takes the item's index number, never a path, so the
-  page can only open files the index lists. Same localhost guard as Kill proc.
-- **GitHub links:** a checklist in a repo with a GitHub remote also gets a
-  GitHub link (rendered, with copy buttons on code blocks). GitHub shows the
+- **Opening one:** click its title, or press Enter to open the top match. If
+  the checklist's repo has a GitHub remote, the title opens it on GitHub
+  (rendered, with copy buttons on code blocks) and a small Sublime link beside
+  it opens the file on this Mac to edit. Without a GitHub remote the title
+  opens it on the Mac. `POST /checklists/open` takes the item's index number,
+  never a path, so the page can only open files the index lists. Same
+  localhost guard as Kill proc.
+- **GitHub is the last pushed version.** GitHub shows the
   last pushed version, so the card warns "GitHub is behind this Mac: push" or
   "GitHub is newer: pull before editing here". Edit on the Mac; if you edit
   on GitHub, pull before touching the file locally.

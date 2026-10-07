@@ -200,7 +200,7 @@
   .cl-search input { flex: 1; }
   .cl-list { list-style: none; margin: 0; padding: 0; font-size: .9rem; columns: 2 420px; column-gap: 28px; }
   .cl-list li { padding: 7px 0; border-bottom: 1px dashed var(--line); break-inside: avoid; }
-  .cl-list .cl-title { font-weight: 600; background: none; border: none; padding: 0; color: var(--blue); cursor: pointer; font: inherit; text-align: left; }
+  .cl-list .cl-title { font-weight: 600; background: none; border: none; padding: 0; color: var(--blue); cursor: pointer; font: inherit; text-align: left; text-decoration: none; }
   .cl-list .cl-title:hover { text-decoration: underline; }
   .cl-list .cl-title:disabled { color: var(--muted); cursor: default; text-decoration: none; }
   .cl-list .stale { color: var(--gold-deep); font-weight: 600; }
@@ -307,7 +307,7 @@
       <input type="text" id="clQuery" placeholder="Search checklists: grading, rollover, new repo..." oninput="clSearchSoon()" onkeydown="if(event.key==='Enter')clOpenTop()">
     </div>
     <ul class="cl-list" id="clList"></ul>
-    <div class="small" style="margin-top:8px">Click a title to open it here; GitHub shows the last pushed version, with copy buttons. Used one and something was missing? Fix the checklist now, before you close it. Not listed? Add it to CHECKLISTS.md in the Stacks.</div>
+    <div class="small" style="margin-top:8px">Click a title to open it on GitHub (last pushed version, with copy buttons); Sublime opens the file on this Mac to edit. Used one and something was missing? Fix the checklist now, before you close it. Not listed? Add it to CHECKLISTS.md in the Stacks.</div>
   </section>
 
   <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
@@ -736,9 +736,12 @@ async function loadChecklists(){
       const age = !it.exists ? '<span class="stale">missing</span>'
         : it.stale ? `<span class="stale">stale, ${it.age_days}d</span>`
         : `revised ${escapeHtml(it.revised)}`;
-      li.innerHTML = `<button class="cl-title" ${it.exists?'':'disabled'} onclick="clOpen(${Number(it.id)})">${escapeHtml(it.title)}</button>
+      const title = it.github_url && it.exists
+        ? `<a class="cl-title" href="${safeUrl(it.github_url)}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a>`
+        : `<button class="cl-title" ${it.exists?'':'disabled'} onclick="clOpen(${Number(it.id)})">${escapeHtml(it.title)}</button>`;
+      li.innerHTML = `${title}
         <span class="small"> &middot; ${escapeHtml(it.type)} &middot; ${age}</span>
-        ${it.github_url ? ` <a class="small" href="${safeUrl(it.github_url)}" target="_blank" rel="noopener">GitHub</a>` : ''}
+        ${it.github_url && it.exists ? ` <a class="small" href="#" onclick="clOpen(${Number(it.id)});return false">Sublime</a>` : ''}
         <span class="small" style="display:block">Run: ${escapeHtml(it.when)}</span>
         ${it.behind ? '<span class="small stale" style="display:block">GitHub is newer: pull before editing here</span>' : ''}
         ${(it.ahead || it.dirty) && it.github_url ? '<span class="small" style="display:block">GitHub is behind this Mac: push to update it</span>' : ''}
@@ -756,7 +759,7 @@ async function clOpen(id){
   try { await fetch('/checklists/open', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) }); }
   catch(e){}
 }
-function clOpenTop(){ const t = CL_ITEMS.find(i=>i.exists); if(t) clOpen(t.id); }
+function clOpenTop(){ const t = CL_ITEMS.find(i=>i.exists); if(!t) return; if(t.github_url) window.open(safeUrl(t.github_url), '_blank', 'noopener'); else clOpen(t.id); }
 loadChecklists();
 
 /* ---------- util ---------- */
