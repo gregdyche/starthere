@@ -13,10 +13,13 @@ Same as `python3 -m http.server 8000`, with three differences:
   - GET /brief renders the daily brief markdown (BRIEF_PATH, default
     ~/daily-brief.md) as an HTML page, so it is read in the browser. The
     brief never enters this repo; it is read from disk on each request.
+  - GET /crm renders the newest CRM_Briefing_YYYY-MM-DD.md in CRM_DIR
+    (default ~/Documents/Claude/Projects/My CRM) the same way.
 
 All write and open endpoints only accept requests whose Host and Origin are this
 machine's localhost, so another website open in the browser cannot use them.
 """
+import glob
 import html
 import importlib.util
 import json
@@ -52,11 +55,20 @@ def _checklists():
 
 
 BRIEF_PATH = os.environ.get("BRIEF_PATH", os.path.expanduser("~/daily-brief.md"))
+CRM_DIR = os.environ.get("CRM_DIR", os.path.expanduser("~/Documents/Claude/Projects/My CRM"))
+
+
+def _newest_crm_briefing():
+    """Newest CRM_Briefing_YYYY-MM-DD.md by the date in its name, or None."""
+    found = sorted(glob.glob(os.path.join(glob.escape(CRM_DIR), "CRM_Briefing_*.md")))
+    return found[-1] if found else None
+
+
 # marked (pinned) renders the markdown in the browser; tables included.
 BRIEF_PAGE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daily Brief</title>
+<title>__TITLE__</title>
 <style>
   :root { --ink:#1b2a3a; --bg:#f7f5ef; --line:#d9d4c7; --link:#1d5fa8; }
   @media (prefers-color-scheme: dark) {
@@ -103,7 +115,11 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
         if url.path == "/brief":
-            self._brief()
+            self._markdown_page(BRIEF_PATH, "Daily Brief")
+            return
+        if url.path == "/crm":
+            self._markdown_page(_newest_crm_briefing(), "CRM Briefing",
+                                missing=f"No CRM_Briefing_*.md found in `{CRM_DIR}`.")
             return
         if url.path != "/checklists":
             return super().do_GET()
@@ -120,19 +136,21 @@ class Handler(SimpleHTTPRequestHandler):
                          "items": [{k: i[k] for k in PUBLIC_FIELDS if k in i}
                                    for i in items]})
 
-    def _brief(self):
+    def _markdown_page(self, path, title, missing=None):
         if self.headers.get("Host") not in LOCAL_HOSTS:
             self.send_error(403)
             return
         try:
-            with open(BRIEF_PATH, encoding="utf-8") as f:
+            if path is None:
+                raise OSError
+            with open(path, encoding="utf-8") as f:
                 md = f.read()
-            stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getmtime(BRIEF_PATH)))
-            meta = f"{html.escape(BRIEF_PATH)}, saved {stamp}"
+            stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getmtime(path)))
+            meta = f"{html.escape(path)}, saved {stamp}"
         except OSError:
-            md, meta = f"No brief found at `{BRIEF_PATH}`.", "missing"
-        # json.dumps alone would let "</script>" in the brief close the tag
-        page = (BRIEF_PAGE.replace("__META__", meta)
+            md, meta = missing or f"No file found at `{path}`.", "missing"
+        # json.dumps alone would let "</script>" in the markdown close the tag
+        page = (BRIEF_PAGE.replace("__TITLE__", title).replace("__META__", meta)
                 .replace("__MD__", json.dumps(md).replace("</", "<\\/")))
         body = page.encode()
         self.send_response(200)
