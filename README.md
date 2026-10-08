@@ -34,6 +34,7 @@ Set it as your browser homepage or pin the tab.
 | --- | --- |
 | **Preflight Checklist** | The daily non-negotiables. The list lives in `checklist.json` (git-tracked); checkmarks live in the browser and clear each morning. See [The checklist is code](#the-checklist-is-code). |
 | **Checklists** | Search box over every checklist you operate from, wherever it lives, with stale ones flagged. Reads a private index in another repo; nothing is stored here. See [Checklists card](#checklists-card). |
+| **Today's daily brief** (small link above Checklists) | Opens `/brief`: `serve.py` reads `~/daily-brief.md` (override with `BRIEF_PATH`) on each request and renders it as HTML (marked, from jsdelivr). The brief never enters this repo. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. See [Tortoise Watch sync](#tortoise-watch-sync). |

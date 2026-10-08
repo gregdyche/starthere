@@ -10,14 +10,19 @@ Same as `python3 -m http.server 8000`, with three differences:
     POST /checklists/open opens one of them on this Mac. Both use the reader
     in the Stacks repo (STACKS_TOOLS, default ~/repos/stacks/tools); open
     takes an index number, never a path, so only listed files can be opened.
+  - GET /brief renders the daily brief markdown (BRIEF_PATH, default
+    ~/daily-brief.md) as an HTML page, so it is read in the browser. The
+    brief never enters this repo; it is read from disk on each request.
 
 All write and open endpoints only accept requests whose Host and Origin are this
 machine's localhost, so another website open in the browser cannot use them.
 """
+import html
 import importlib.util
 import json
 import os
 import threading
+import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -46,6 +51,37 @@ def _checklists():
     return mod
 
 
+BRIEF_PATH = os.environ.get("BRIEF_PATH", os.path.expanduser("~/daily-brief.md"))
+# marked (pinned) renders the markdown in the browser; tables included.
+BRIEF_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Brief</title>
+<style>
+  :root { --ink:#1b2a3a; --bg:#f7f5ef; --line:#d9d4c7; --link:#1d5fa8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#e6e2d8; --bg:#14181d; --line:#333a42; --link:#7fb2ec; }
+  }
+  body { background:var(--bg); color:var(--ink); margin:0;
+         font:16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:24px 16px 64px; }
+  a { color:var(--link); }
+  h1 { font-size:1.6rem; } h2 { margin-top:2rem; border-bottom:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; font-size:.92rem; display:block; overflow-x:auto; }
+  th, td { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  .meta { font-size:.8rem; opacity:.7; }
+</style></head><body><main>
+<div class="meta">__META__</div>
+<div id="brief">Loading...</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script>
+const md = __MD__;
+document.getElementById('brief').innerHTML = marked.parse(md);
+document.querySelectorAll('#brief a').forEach(a => a.target = '_blank');
+</script></body></html>"""
+
+
 MAX_ITEMS = 30
 MAX_ITEM_LEN = 200
 
@@ -66,6 +102,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         url = urlparse(self.path)
+        if url.path == "/brief":
+            self._brief()
+            return
         if url.path != "/checklists":
             return super().do_GET()
         if self.headers.get("Host") not in LOCAL_HOSTS:
@@ -80,6 +119,28 @@ class Handler(SimpleHTTPRequestHandler):
         self._json(200, {"stale_days": cl.STALE_DAYS, "query": query,
                          "items": [{k: i[k] for k in PUBLIC_FIELDS if k in i}
                                    for i in items]})
+
+    def _brief(self):
+        if self.headers.get("Host") not in LOCAL_HOSTS:
+            self.send_error(403)
+            return
+        try:
+            with open(BRIEF_PATH, encoding="utf-8") as f:
+                md = f.read()
+            stamp = time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getmtime(BRIEF_PATH)))
+            meta = f"{html.escape(BRIEF_PATH)}, saved {stamp}"
+        except OSError:
+            md, meta = f"No brief found at `{BRIEF_PATH}`.", "missing"
+        # json.dumps alone would let "</script>" in the brief close the tag
+        page = (BRIEF_PAGE.replace("__META__", meta)
+                .replace("__MD__", json.dumps(md).replace("</", "<\\/")))
+        body = page.encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def do_PUT(self):
         if self.path != "/checklist.json":
