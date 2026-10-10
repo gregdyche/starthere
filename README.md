@@ -36,6 +36,7 @@ Set it as your browser homepage or pin the tab.
 | **Checklists** | Search box over every checklist you operate from, wherever it lives, with stale ones flagged. Reads a private index in another repo; nothing is stored here. See [Checklists card](#checklists-card). |
 | **Today's daily brief** (small link above Checklists) | Opens `/brief`: `serve.py` reads `~/daily-brief.md` (override with `BRIEF_PATH`) on each request and renders it as HTML (marked, from jsdelivr). The brief never enters this repo. Needs `serve.py`. |
 | **CRM briefing** (next to the daily brief link) | Opens `/crm`: the newest `CRM_Briefing_YYYY-MM-DD.md` in `~/Documents/Claude/Projects/My CRM` (override with `CRM_DIR`), picked by the date in the filename on each request, rendered the same way. Needs `serve.py`. |
+| **Inbox** (next to the CRM briefing link) | Opens `/inbox`: `~/Documents/Claude/brief/INBOX.md` (override with `INBOX_PATH`), the one queue every capture channel writes to (email forwards, voice memos, dropped files), rendered the same way. The design is in `INTAKE.md` beside it. The preflight item "Inbox triaged" is the habit that keeps it short. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. See [Tortoise Watch sync](#tortoise-watch-sync). |

@@ -302,7 +302,7 @@
 
   <!-- CHECKLISTS -> search over stacks/CHECKLISTS.md, served by serve.py -->
   <section class="card cl-card">
-    <div class="small" style="margin-bottom:6px"><a href="/brief" target="_blank">Today's daily brief</a> &middot; <a href="/crm" target="_blank">CRM briefing</a></div>
+    <div class="small" style="margin-bottom:6px"><a href="/brief" target="_blank">Today's daily brief</a> &middot; <a href="/crm" target="_blank">CRM briefing</a> &middot; <a href="/inbox" target="_blank">Inbox</a></div>
     <h2>Checklists <span class="reset-note" id="clStatus"></span></h2>
     <div class="cl-search">
       <input type="text" id="clQuery" placeholder="Search checklists: grading, rollover, new repo..." oninput="clSearchSoon()" onkeydown="if(event.key==='Enter')clOpenTop()">
@@ -425,7 +425,8 @@ setInterval(tick, 1000); tick();
 const DEFAULT_CHECKS = [
   "OneDrive is syncing",
   "Calendar reviewed",
-  "Daily briefing read"
+  "Daily briefing read",
+  "Inbox triaged"
 ];
 const CHECKLIST_EDITABLE = location.protocol === 'http:' &&
   ['localhost','127.0.0.1'].includes(location.hostname);

@@ -15,6 +15,8 @@ Same as `python3 -m http.server 8000`, with three differences:
     brief never enters this repo; it is read from disk on each request.
   - GET /crm renders the newest CRM_Briefing_YYYY-MM-DD.md in CRM_DIR
     (default ~/Documents/Claude/Projects/My CRM) the same way.
+  - GET /inbox renders the intake queue (INBOX_PATH, default
+    ~/Documents/Claude/brief/INBOX.md) the same way.
 
 All write and open endpoints only accept requests whose Host and Origin are this
 machine's localhost, so another website open in the browser cannot use them.
@@ -56,6 +58,7 @@ def _checklists():
 
 BRIEF_PATH = os.environ.get("BRIEF_PATH", os.path.expanduser("~/daily-brief.md"))
 CRM_DIR = os.environ.get("CRM_DIR", os.path.expanduser("~/Documents/Claude/Projects/My CRM"))
+INBOX_PATH = os.environ.get("INBOX_PATH", os.path.expanduser("~/Documents/Claude/brief/INBOX.md"))
 
 
 def _newest_crm_briefing():
@@ -120,6 +123,9 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path == "/crm":
             self._markdown_page(_newest_crm_briefing(), "CRM Briefing",
                                 missing=f"No CRM_Briefing_*.md found in `{CRM_DIR}`.")
+            return
+        if url.path == "/inbox":
+            self._markdown_page(INBOX_PATH, "Inbox")
             return
         if url.path != "/checklists":
             return super().do_GET()
