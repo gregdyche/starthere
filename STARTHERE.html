@@ -113,6 +113,9 @@
     padding: 16px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    /* row 1 (This Week) hugs its content; the tall Checklists card spans
+       rows 1-2, and 1fr sends its extra height to row 2, not This Week */
+    grid-template-rows: auto 1fr;
     gap: 18px;
   }
   .card {
@@ -143,6 +146,8 @@
   .preflight { border-top: 6px solid var(--gold); }
   /* Checklists: top right, running down beside This Week and the row under it */
   .cl-card { grid-row: span 2; }
+  /* This Week: capped at about a third of the screen, scrolls past that */
+  .week { max-height: 33vh; overflow-y: auto; }
   body.cleared .preflight { border-top-color: var(--blue); }
   .preflight h2 { font-size: 1.05rem; }
   .preflight h2 .badge {
@@ -295,7 +300,7 @@
 <main class="wrap">
 
   <!-- THIS WEEK -> read-only snapshot from Tortoise Watch -->
-  <section class="card span2">
+  <section class="card span2 week">
     <h2>This Week <span class="reset-note" id="tortoiseStatus"></span> <a class="iconbtn" href="https://app.tortoiseplanner.com/" target="_blank" style="text-decoration:none">Open Tortoise</a></h2>
     <ul class="grat-list" id="tortoiseList"></ul>
   </section>

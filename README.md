@@ -39,7 +39,7 @@ Set it as your browser homepage or pin the tab.
 | **Inbox** (next to the CRM briefing link) | Opens `/inbox`: `~/Documents/Claude/brief/INBOX.md` (override with `INBOX_PATH`), the one queue every capture channel writes to (email forwards, voice memos, dropped files), rendered the same way. The design is in `INTAKE.md` beside it. The preflight item "Inbox triaged" is the habit that keeps it short. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
-| **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. See [Tortoise Watch sync](#tortoise-watch-sync). |
+| **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
 | **Moon Shots** | Ideas bigger than a month, so they have a home instead of a sticky note. |
 | **Saying of the Day** | Ignatian reflection feed, with a local quote as offline fallback. |
 | **Creighton Feed** | Campus news via RSS. |
