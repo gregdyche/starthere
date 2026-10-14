@@ -323,33 +323,6 @@
     <ul id="issueList"><li class="small">Loading...</li></ul>
   </section>
 
-  <!-- MOON SHOTS -> Someday Maybe Doc -->
-  <section class="card">
-    <h2>Moon Shots <a class="iconbtn" id="somedayLink" href="#" target="_blank" style="text-decoration:none">View Doc</a></h2>
-    <textarea id="moonshots" placeholder="Big ideas that take more than a month. Save appends to your 'Someday Maybe' Google Doc."></textarea>
-    <div class="small" style="margin-top:10px">Set these once. They live in this browser only and are never part of the file.</div>
-    <div class="rss-cfg">
-      <input type="text" id="docEndpointInput" placeholder="Apps Script /exec URL">
-      <input type="text" id="docUrlInput" placeholder="Google Doc URL">
-      <button class="btn ghost" onclick="saveDocConfig()">Set</button>
-    </div>
-    <div class="check-add">
-      <button class="btn" id="moonSave" onclick="saveMoonshots()">Save to Someday Maybe</button>
-      <span class="small" id="moonStatus" style="align-self:center"></span>
-    </div>
-  </section>
-
-  <!-- GRATITUDE -->
-  <section class="card">
-    <h2>Gratitude</h2>
-    <div class="check-add">
-      <input type="text" id="gratInput" placeholder="One thing I am grateful for" onkeydown="if(event.key==='Enter')addGrat()">
-      <button class="btn" onclick="addGrat()">Add</button>
-    </div>
-    <ul class="grat-list" id="gratList"></ul>
-    <div class="small" id="gratNote" style="margin-top:8px"></div>
-  </section>
-
   <!-- CREIGHTON RSS -->
   <section class="card span2">
     <h2>Creighton Feed <button class="iconbtn" onclick="loadRSS()">Refresh</button></h2>
@@ -505,68 +478,6 @@ function updateFlightState(done, total){
   }
 }
 loadMaster().then(renderChecks);
-
-/* ---------- doc config (stored in this browser, never in the file) ---------- */
-function docEndpoint(){ return LS.get('docEndpoint', ''); }
-function saveDocConfig(){
-  LS.set('docEndpoint', document.getElementById('docEndpointInput').value.trim());
-  LS.set('docUrl', document.getElementById('docUrlInput').value.trim());
-  refreshDocConfig();
-}
-function refreshDocConfig(){
-  const ep = LS.get('docEndpoint',''), du = LS.get('docUrl','');
-  document.getElementById('docEndpointInput').value = ep;
-  document.getElementById('docUrlInput').value = du;
-  const link = document.getElementById('somedayLink');
-  link.setAttribute('href', safeUrl(du));
-  link.style.display = du ? '' : 'none';
-}
-refreshDocConfig();
-
-/* ---------- moon shots -> Someday Maybe Doc ---------- */
-const moonBox = document.getElementById('moonshots');
-moonBox.value = LS.get('moonshots', '');
-moonBox.addEventListener('input', () => LS.set('moonshots', moonBox.value));
-function saveMoonshots(){
-  const status = document.getElementById('moonStatus');
-  const btn = document.getElementById('moonSave');
-  const text = moonBox.value.trim();
-  if(!text){ status.textContent = 'Nothing to save.'; return; }
-  const ep = docEndpoint();
-  if(!ep){ status.textContent = 'No endpoint set. Add one below.'; return; }
-  const stamp = new Date().toLocaleString();
-  status.textContent = 'Saving...';
-  btn.disabled = true;
-  fetch(ep, {
-    method: 'POST',
-    mode: 'no-cors',
-    cache: 'no-cache',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ content: `[${stamp}]\n${text}`, target: 'someday' })
-  })
-  .then(() => { status.textContent = 'Sent to Someday Maybe.'; btn.disabled = false; })
-  .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
-}
-
-/* ---------- gratitude ---------- */
-function loadGrat(){ return LS.get('gratitude', {}); }
-function renderGrat(){
-  const all=loadGrat(); const today=all[todayKey()]||[];
-  const ul=document.getElementById('gratList'); ul.innerHTML='';
-  today.forEach((g,i)=>{
-    const li=document.createElement('li');
-    li.innerHTML=`<span>${escapeHtml(g)}</span><button class="x" onclick="delGrat(${i})">&times;</button>`;
-    ul.appendChild(li);
-  });
-  const days=Object.keys(all).length;
-  document.getElementById('gratNote').textContent = days?`${days} day(s) logged.`:'';
-}
-function addGrat(){
-  const inp=document.getElementById('gratInput'); const v=inp.value.trim(); if(!v)return;
-  const all=loadGrat(); (all[todayKey()]=all[todayKey()]||[]).push(v); LS.set('gratitude',all); inp.value=''; renderGrat();
-}
-function delGrat(i){ const all=loadGrat(); all[todayKey()].splice(i,1); LS.set('gratitude',all); renderGrat(); }
-renderGrat();
 
 /* ---------- GitHub issues (newest open, via serve.py /issues) ---------- */
 async function loadIssues(){

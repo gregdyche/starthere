@@ -39,10 +39,8 @@ Set it as your browser homepage or pin the tab.
 | **Inbox** (next to the CRM briefing link) | Opens `/inbox`: `~/Documents/Claude/brief/INBOX.md` (override with `INBOX_PATH`), the one queue every capture channel writes to (email forwards, voice memos, dropped files), rendered the same way. The design is in `INTAKE.md` beside it. The preflight item "Inbox triaged" is the habit that keeps it short. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
-| **Moon Shots** | Ideas bigger than a month, so they have a home instead of a sticky note. |
 | **GitHub Issues** | The 10 newest open issues across your repos, newest first. `serve.py` runs `gh` (the GitHub CLI, already logged in) and hands the page only titles and links. Needs `serve.py` and `gh`. |
 | **Creighton Feed** | Campus news via RSS. |
-| **Gratitude** | One line. Takes ten seconds. |
 
 ---
 
@@ -133,8 +131,8 @@ python3 serve.py
 **Why any of this matters:** browsers treat those two addresses as two different
 places, even though it is one file. Two things follow from that.
 
-1. **Your saved data does not carry over between them.** Your checklist,
-   gratitude log, and settings are stored per address. Open the page the other way
+1. **Your saved data does not carry over between them.** Your checklist
+   progress and settings are stored per address. Open the page the other way
    and it will look wiped clean — nothing is lost, you are just looking at a
    different drawer.
 2. **The news feed, GitHub Issues, and This Week card refuse to load over
@@ -216,10 +214,6 @@ wrong, fix the checklist before you close it.
 
 Some cards need a value from you before they work. Enter these directly in the page:
 
-- **Moon Shots** — needs a Google Apps Script web app URL that accepts a POST
-  with a `content` field and appends it to a Doc. Paste the `/exec` URL and the
-  Doc URL into the fields on that card.
-- **Daily Briefing** — set a path or URL to whatever you read first.
 - **Creighton Feed** — any RSS or Atom URL.
 - **This Week** — needs nothing in the page. It reads `tortoise-week.json` next
   to `STARTHERE.html`; see [Tortoise Watch sync](#tortoise-watch-sync).
@@ -228,19 +222,11 @@ Some cards need a value from you before they work. Enter these directly in the p
 
 ## Where your data lives
 
-Everything you type stays in your browser's `localStorage` — but two things do leave
-your machine. Moon Shots you explicitly click Save on POSTs to the Apps Script
-endpoint you configured. Separately, and without you clicking anything, the local
-`serve.py` fetches the Creighton feed from its publisher and your GitHub issues from GitHub (via `gh`) every time the page loads.
+Everything you type stays in your browser's `localStorage`. Nothing you type is sent
+anywhere. Without you clicking anything, the local `serve.py` fetches the Creighton feed from its publisher and your GitHub issues from GitHub (via `gh`) every time the page loads.
 See [Known issues](#known-issues-and-things-to-know-if-you-fork-this).
 
-**That endpoint is never written into this file.** It is entered at runtime and
-stored in your browser. This matters: an Apps Script `/exec` URL is an
-unauthenticated write pipe into your Google Doc, and this repo is public. If you
-fork this, keep it that way.
-
-Clearing your browser data clears your checklists and gratitude log. Anything you
-want to keep, save to the Doc.
+Clearing your browser data clears your saved checklist progress and settings.
 
 ---
 
@@ -340,11 +326,6 @@ cannot fetch them directly. The endpoint only accepts requests from this page an
 refuses non-public addresses (localhost, private ranges, `file://`). Opened as a
 plain file, the Creighton Feed card shows an error. Replaced `api.allorigins.win` on 2026-10-14 after that proxy started
 returning 500s.
-
-**"Sent to Google Doc" is not a delivery confirmation.** The save uses `no-cors`
-mode, which makes the response invisible to the page. The success message appears
-whether or not the Apps Script actually received it. If something matters, check
-the Doc.
 
 ---
 
