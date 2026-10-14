@@ -17,6 +17,9 @@ Same as `python3 -m http.server 8000`, with three differences:
     (default ~/Documents/Claude/Projects/My CRM) the same way.
   - GET /inbox renders the intake queue (INBOX_PATH, default
     ~/Documents/Claude/brief/INBOX.md) the same way.
+  - GET /feed?url=... fetches a public RSS/Atom feed for the Creighton Feed and
+    Saying of the Day cards (feeds send no CORS headers). Public http(s) hosts
+    only; private and local addresses are refused.
 
 All write and open endpoints only accept requests whose Host and Origin are this
 machine's localhost, so another website open in the browser cannot use them.
@@ -26,8 +29,12 @@ import html
 import importlib.util
 import json
 import os
+import ipaddress
+import socket
 import threading
 import time
+import urllib.error
+import urllib.request
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -54,6 +61,35 @@ def _checklists():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+FEED_MAX_BYTES = 2_000_000
+
+
+def _public_http_url(url):
+    """True when url is http(s) and every address its host resolves to is public."""
+    p = urlparse(url)
+    if p.scheme not in ("http", "https") or not p.hostname:
+        return False
+    try:
+        infos = socket.getaddrinfo(p.hostname, p.port or (443 if p.scheme == "https" else 80))
+        return all(ipaddress.ip_address(i[4][0]).is_global for i in infos)
+    except (OSError, ValueError):
+        return False
+
+
+class _PublicRedirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not _public_http_url(newurl):
+            raise urllib.error.URLError("redirect to a non-public address")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _fetch_feed(url):
+    opener = urllib.request.build_opener(_PublicRedirects)
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 STARTHERE"})
+    with opener.open(req, timeout=10) as r:
+        return r.read(FEED_MAX_BYTES)
 
 
 BRIEF_PATH = os.environ.get("BRIEF_PATH", os.path.expanduser("~/daily-brief.md"))
@@ -127,6 +163,9 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path == "/inbox":
             self._markdown_page(INBOX_PATH, "Inbox")
             return
+        if url.path == "/feed":
+            self._feed(parse_qs(url.query).get("url", [""])[0])
+            return
         if url.path != "/checklists":
             return super().do_GET()
         if self.headers.get("Host") not in LOCAL_HOSTS:
@@ -141,6 +180,25 @@ class Handler(SimpleHTTPRequestHandler):
         self._json(200, {"stale_days": cl.STALE_DAYS, "query": query,
                          "items": [{k: i[k] for k in PUBLIC_FIELDS if k in i}
                                    for i in items]})
+
+    def _feed(self, target):
+        if self.headers.get("Host") not in LOCAL_HOSTS:
+            self.send_error(403)
+            return
+        if not _public_http_url(target):
+            self.send_error(400, "feed url must be a public http(s) address")
+            return
+        try:
+            body = _fetch_feed(target)
+        except (OSError, ValueError):
+            self.send_error(502, "could not fetch feed")
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/xml; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _markdown_page(self, path, title, missing=None):
         if self.headers.get("Host") not in LOCAL_HOSTS:

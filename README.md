@@ -38,7 +38,6 @@ Set it as your browser homepage or pin the tab.
 | **CRM briefing** (next to the daily brief link) | Opens `/crm`: the newest `CRM_Briefing_YYYY-MM-DD.md` in `~/Documents/Claude/Projects/My CRM` (override with `CRM_DIR`), picked by the date in the filename on each request, rendered the same way. Needs `serve.py`. |
 | **Inbox** (next to the CRM briefing link) | Opens `/inbox`: `~/Documents/Claude/brief/INBOX.md` (override with `INBOX_PATH`), the one queue every capture channel writes to (email forwards, voice memos, dropped files), rendered the same way. The design is in `INTAKE.md` beside it. The preflight item "Inbox triaged" is the habit that keeps it short. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
-| **Launch Pad** | Direct links to Toggl, Canvas, mail, calendar, daily briefing. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
 | **Moon Shots** | Ideas bigger than a month, so they have a home instead of a sticky note. |
 | **Saying of the Day** | Ignatian reflection feed, with a local quote as offline fallback. |
@@ -231,8 +230,8 @@ Some cards need a value from you before they work. Enter these directly in the p
 
 Everything you type stays in your browser's `localStorage` — but two things do leave
 your machine. Moon Shots you explicitly click Save on POSTs to the Apps Script
-endpoint you configured. Separately, and without you clicking anything, feed URLs
-are sent to a third-party CORS proxy every time the page loads.
+endpoint you configured. Separately, and without you clicking anything, the local
+`serve.py` fetches the two feeds from their publishers every time the page loads.
 See [Known issues](#known-issues-and-things-to-know-if-you-fork-this).
 
 **That endpoint is never written into this file.** It is entered at runtime and
@@ -335,12 +334,13 @@ which exits 1 on anything not already in the baseline and never writes the file.
 
 ## Known issues and things to know if you fork this
 
-**Feed requests go through a third party.** The Creighton feed and the reflection
-quote are fetched through `api.allorigins.win`, a public CORS proxy, because a page
-opened from your hard drive cannot fetch most feeds directly. Whatever URL you put
-in the RSS box is sent to that operator, along with whatever comes back. For public
-news feeds that is harmless — it reveals only what you read. **Do not paste a feed
-URL that contains a token or a private calendar link.**
+**Feeds need `serve.py`.** The Creighton feed and the reflection quote are fetched
+by `serve.py` at `/feed?url=...`, because feeds send no CORS headers and a page
+cannot fetch them directly. The endpoint only accepts requests from this page and
+refuses non-public addresses (localhost, private ranges, `file://`). Opened as a
+plain file, the Creighton Feed card shows an error and the quote stays on the
+local list. Replaced `api.allorigins.win` on 2026-10-14 after that proxy started
+returning 500s.
 
 **"Sent to Google Doc" is not a delivery confirmation.** The save uses `no-cors`
 mode, which makes the response invisible to the page. The success message appears
@@ -359,7 +359,6 @@ One file. Open it in any editor.
 - Default checklist items: `DEFAULT_CHECKS`
 - Git steps: `DEFAULT_GIT_CHECKS`
 - Quotes: `QUOTES`
-- Launch Pad links: the `<a>` tags in the Launch Pad card
 - Colors: the `:root` block at the top
 
 Keep placeholders generic — `~/Documents/file.md`, never a real path. Real paths

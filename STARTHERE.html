@@ -233,17 +233,6 @@
   .btn.ghost:hover { background: #eef3f8; }
   :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
-  /* Links */
-  .links a {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 10px; margin-bottom: 7px;
-    text-decoration: none; color: var(--ink);
-    border: 1px solid var(--line); border-radius: 7px;
-    font-weight: 600;
-  }
-  .links a:hover { border-color: var(--blue); color: var(--blue); }
-  .links a .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); flex: none; }
-
   /* RSS */
   #rssList { list-style: none; margin: 0; padding: 0; }
   #rssList li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
@@ -327,21 +316,6 @@
     <div class="check-add">
       <input type="text" id="newCheckItem" placeholder="Add a check item">
       <button class="btn" onclick="addCheckItem()">Add</button>
-    </div>
-  </section>
-
-  <!-- QUICK LINKS -->
-  <section class="card links">
-    <h2>Launch Pad</h2>
-    <a href="https://track.toggl.com/timer" target="_blank"><span class="dot"></span>Toggl Timer</a>
-    <a href="#" id="briefingLink"><span class="dot"></span>Daily Briefing</a>
-    <a href="https://blueline.instructure.com" target="_blank"><span class="dot"></span>Canvas (Blueline)</a>
-    <a href="https://mail.google.com" target="_blank"><span class="dot"></span>Email</a>
-    <a href="https://calendar.google.com" target="_blank"><span class="dot"></span>Calendar</a>
-    <div class="small" style="margin-top:8px">Edit links in the file. Briefing path set below.</div>
-    <div class="rss-cfg">
-      <input type="text" id="briefingPath" placeholder="~/Documents/daily-brief.md">
-      <button class="btn ghost" onclick="saveBriefing()">Set</button>
     </div>
   </section>
 
@@ -576,19 +550,6 @@ function saveMoonshots(){
   .catch(err => { status.textContent = 'Error: ' + err; btn.disabled = false; });
 }
 
-/* ---------- daily briefing link ---------- */
-function refreshBriefing(){
-  const p = LS.get('briefingPath','');
-  const link = document.getElementById('briefingLink');
-  document.getElementById('briefingPath').value = p;
-  if(p) link.setAttribute('href', p);
-}
-function saveBriefing(){
-  LS.set('briefingPath', document.getElementById('briefingPath').value.trim());
-  refreshBriefing();
-}
-refreshBriefing();
-
 /* ---------- gratitude ---------- */
 function loadGrat(){ return LS.get('gratitude', {}); }
 function renderGrat(){
@@ -636,10 +597,10 @@ function localQuote(){
 async function loadReflection(){
   localQuote(); // immediate offline fallback
   try {
-    // Fetched via a third-party CORS proxy; the feed URL and response pass
-    // through api.allorigins.win. Public feeds only.
-    const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(REFLECTION_FEED));
-    const xml = new DOMParser().parseFromString(await res.text(), 'text/xml');
+    // Fetched through serve.py (/feed), since feeds send no CORS headers.
+    const res = await fetch('/feed?url=' + encodeURIComponent(REFLECTION_FEED));
+    if(!res.ok) return;
+    const xml = new DOMParser().parseFromString((await res.text()).trim(), 'text/xml');
     const item = xml.querySelector('item');
     if(!item) return;
     const title = (item.querySelector('title')?.textContent || '').trim();
@@ -663,11 +624,11 @@ async function loadRSS(){
   if(!url){ list.innerHTML='<li class="small">Set a feed URL below, then Refresh.</li>'; return; }
   list.innerHTML='<li class="small">Loading...</li>';
   try {
-    // Same third-party proxy as above: whatever URL is saved here is sent
-    // to api.allorigins.win. Do not use feeds containing tokens.
-    const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+    // Fetched through serve.py (/feed). Public http(s) feeds only.
+    const res = await fetch('/feed?url=' + encodeURIComponent(url));
+    if(!res.ok) throw new Error('feed ' + res.status);
     const text = await res.text();
-    const xml = new DOMParser().parseFromString(text, 'text/xml');
+    const xml = new DOMParser().parseFromString(text.trim(), 'text/xml'); // some feeds lead with whitespace, which strict XML rejects
     let items = [...xml.querySelectorAll('item')];
     if(!items.length) items = [...xml.querySelectorAll('entry')]; // Atom
     if(!items.length){ list.innerHTML='<li class="small">No items found. Check the feed URL.</li>'; return; }
@@ -683,7 +644,7 @@ async function loadRSS(){
       list.appendChild(li);
     });
   } catch(e){
-    list.innerHTML='<li class="small">Could not load feed (network or CORS). Try a different feed URL.</li>';
+    list.innerHTML='<li class="small">Could not load feed. Is serve.py running? Otherwise try a different feed URL.</li>';
   }
 }
 loadRSS();
