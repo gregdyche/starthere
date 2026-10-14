@@ -18,8 +18,10 @@ Same as `python3 -m http.server 8000`, with three differences:
   - GET /inbox renders the intake queue (INBOX_PATH, default
     ~/Documents/Claude/brief/INBOX.md) the same way.
   - GET /feed?url=... fetches a public RSS/Atom feed for the Creighton Feed and
-    Saying of the Day cards (feeds send no CORS headers). Public http(s) hosts
-    only; private and local addresses are refused.
+    cards (feeds send no CORS headers). Public http(s) hosts only; private and
+    local addresses are refused.
+  - GET /issues lists the 10 newest open GitHub issues across your repos, using
+    the `gh` CLI already logged in on this Mac (the token never reaches the page).
 
 All write and open endpoints only accept requests whose Host and Origin are this
 machine's localhost, so another website open in the browser cannot use them.
@@ -31,6 +33,7 @@ import json
 import os
 import ipaddress
 import socket
+import subprocess
 import threading
 import time
 import urllib.error
@@ -90,6 +93,20 @@ def _fetch_feed(url):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 STARTHERE"})
     with opener.open(req, timeout=10) as r:
         return r.read(FEED_MAX_BYTES)
+
+
+def _gh(*args):
+    out = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=20, check=True)
+    return out.stdout.strip()
+
+
+def _newest_issues(limit=10):
+    owner = _gh("api", "user", "-q", ".login")
+    rows = json.loads(_gh("search", "issues", "--owner", owner, "--state", "open",
+                          "--sort", "created", "--order", "desc", "--limit", str(limit),
+                          "--json", "title,url,repository,createdAt,number"))
+    return [{"title": r["title"], "url": r["url"], "number": r["number"],
+             "repo": r["repository"]["name"], "created": r["createdAt"]} for r in rows]
 
 
 BRIEF_PATH = os.environ.get("BRIEF_PATH", os.path.expanduser("~/daily-brief.md"))
@@ -163,6 +180,9 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path == "/inbox":
             self._markdown_page(INBOX_PATH, "Inbox")
             return
+        if url.path == "/issues":
+            self._issues()
+            return
         if url.path == "/feed":
             self._feed(parse_qs(url.query).get("url", [""])[0])
             return
@@ -180,6 +200,15 @@ class Handler(SimpleHTTPRequestHandler):
         self._json(200, {"stale_days": cl.STALE_DAYS, "query": query,
                          "items": [{k: i[k] for k in PUBLIC_FIELDS if k in i}
                                    for i in items]})
+
+    def _issues(self):
+        if self.headers.get("Host") not in LOCAL_HOSTS:
+            self.send_error(403)
+            return
+        try:
+            self._json(200, {"items": _newest_issues()})
+        except (OSError, subprocess.SubprocessError, ValueError, KeyError):
+            self._json(502, {"error": "gh failed; is the gh CLI installed and logged in?"})
 
     def _feed(self, target):
         if self.headers.get("Host") not in LOCAL_HOSTS:

@@ -40,7 +40,7 @@ Set it as your browser homepage or pin the tab.
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
 | **Moon Shots** | Ideas bigger than a month, so they have a home instead of a sticky note. |
-| **Saying of the Day** | Ignatian reflection feed, with a local quote as offline fallback. |
+| **GitHub Issues** | The 10 newest open issues across your repos, newest first. `serve.py` runs `gh` (the GitHub CLI, already logged in) and hands the page only titles and links. Needs `serve.py` and `gh`. |
 | **Creighton Feed** | Campus news via RSS. |
 | **Gratitude** | One line. Takes ten seconds. |
 
@@ -137,14 +137,14 @@ places, even though it is one file. Two things follow from that.
    gratitude log, and settings are stored per address. Open the page the other way
    and it will look wiped clean — nothing is lost, you are just looking at a
    different drawer.
-2. **The news feed, reflection quote, and This Week card refuse to load over
+2. **The news feed, GitHub Issues, and This Week card refuse to load over
    `file://`.** Those cards fetch from the internet or from a sibling file
    (`tortoise-week.json`), and browsers block that kind of fetch from a page
    opened directly off disk.
 
 **Recommendation: use `localhost` (the `starthere` shell function above) for
 daily use.** Double-clicking still works, but silently loses This Week, the
-Creighton feed, and the reflection quote — it will not error, it will just show
+Creighton feed, and GitHub Issues — it will not error, it will just show
 their empty-state messages, which is easy to mistake for something being
 broken. If you do switch between the two methods, expect to re-enter your
 settings once.
@@ -231,7 +231,7 @@ Some cards need a value from you before they work. Enter these directly in the p
 Everything you type stays in your browser's `localStorage` — but two things do leave
 your machine. Moon Shots you explicitly click Save on POSTs to the Apps Script
 endpoint you configured. Separately, and without you clicking anything, the local
-`serve.py` fetches the two feeds from their publishers every time the page loads.
+`serve.py` fetches the Creighton feed from its publisher and your GitHub issues from GitHub (via `gh`) every time the page loads.
 See [Known issues](#known-issues-and-things-to-know-if-you-fork-this).
 
 **That endpoint is never written into this file.** It is entered at runtime and
@@ -334,21 +334,17 @@ which exits 1 on anything not already in the baseline and never writes the file.
 
 ## Known issues and things to know if you fork this
 
-**Feeds need `serve.py`.** The Creighton feed and the reflection quote are fetched
+**Feeds need `serve.py`.** The Creighton feed is fetched
 by `serve.py` at `/feed?url=...`, because feeds send no CORS headers and a page
 cannot fetch them directly. The endpoint only accepts requests from this page and
 refuses non-public addresses (localhost, private ranges, `file://`). Opened as a
-plain file, the Creighton Feed card shows an error and the quote stays on the
-local list. Replaced `api.allorigins.win` on 2026-10-14 after that proxy started
+plain file, the Creighton Feed card shows an error. Replaced `api.allorigins.win` on 2026-10-14 after that proxy started
 returning 500s.
 
 **"Sent to Google Doc" is not a delivery confirmation.** The save uses `no-cors`
 mode, which makes the response invisible to the page. The success message appears
 whether or not the Apps Script actually received it. If something matters, check
 the Doc.
-
-**The reflection feed is hardcoded** while every other feed is configurable. If you
-fork this, that is the line to change first.
 
 ---
 
@@ -358,7 +354,6 @@ One file. Open it in any editor.
 
 - Default checklist items: `DEFAULT_CHECKS`
 - Git steps: `DEFAULT_GIT_CHECKS`
-- Quotes: `QUOTES`
 - Colors: the `:root` block at the top
 
 Keep placeholders generic — `~/Documents/file.md`, never a real path. Real paths

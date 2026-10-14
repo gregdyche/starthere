@@ -234,18 +234,16 @@
   :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   /* RSS */
-  #rssList { list-style: none; margin: 0; padding: 0; }
-  #rssList li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
-  #rssList li:last-child { border-bottom: none; }
-  #rssList a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: .92rem; }
-  #rssList a:hover { color: var(--blue); }
-  #rssList .meta { font-size: .72rem; color: var(--muted); }
+  #rssList, #issueList { list-style: none; margin: 0; padding: 0; }
+  #rssList li, #issueList li { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+  #rssList li:last-child, #issueList li:last-child { border-bottom: none; }
+  #rssList a, #issueList a { text-decoration: none; color: var(--ink); font-weight: 600; font-size: .92rem; }
+  #rssList a:hover, #issueList a:hover { color: var(--blue); }
+  #rssList .meta, #issueList .meta { font-size: .72rem; color: var(--muted); }
   .rss-cfg { display: flex; gap: 6px; margin-top: 10px; }
   .rss-cfg input { flex: 1; font-size: .8rem; }
 
-  /* Quote + gratitude */
-  .quote { font-size: 1.05rem; font-style: italic; line-height: 1.5; }
-  .quote .who { display: block; margin-top: 8px; font-style: normal; font-size: .8rem; color: var(--muted); font-weight: 600; }
+  /* Gratitude */
   .grat-list { list-style: none; margin: 10px 0 0; padding: 0; font-size: .9rem; }
   .grat-list li { padding: 5px 0; border-bottom: 1px dashed var(--line); display: flex; justify-content: space-between; gap: 8px; }
   .grat-list .x { color: var(--muted); cursor: pointer; border: none; background: none; font-size: 1rem; }
@@ -319,10 +317,10 @@
     </div>
   </section>
 
-  <!-- SAYING OF THE DAY -->
+  <!-- GITHUB ISSUES -->
   <section class="card">
-    <h2>Saying of the Day</h2>
-    <div class="quote" id="quote"></div>
+    <h2>GitHub Issues <button class="iconbtn" onclick="loadIssues()">Refresh</button></h2>
+    <ul id="issueList"><li class="small">Loading...</li></ul>
   </section>
 
   <!-- MOON SHOTS -> Someday Maybe Doc -->
@@ -570,49 +568,27 @@ function addGrat(){
 function delGrat(i){ const all=loadGrat(); all[todayKey()].splice(i,1); LS.set('gratitude',all); renderGrat(); }
 renderGrat();
 
-/* ---------- saying of the day ---------- */
-const QUOTES = [
-  ["Discipline equals freedom.","Jocko Willink"],
-  ["The obstacle is the way.","Marcus Aurelius"],
-  ["What gets measured gets managed.","Peter Drucker"],
-  ["You do not rise to the level of your goals; you fall to the level of your systems.","James Clear"],
-  ["Slow is smooth, and smooth is fast.","Aviation proverb"],
-  ["The best way to predict the future is to create it.","Peter Drucker"],
-  ["Do the hard things first.","unknown"],
-  ["Amateurs practice until they get it right; professionals practice until they cannot get it wrong.","unknown"],
-  ["Energy and persistence conquer all things.","Benjamin Franklin"],
-  ["Well begun is half done.","Aristotle"],
-  ["Focus is saying no to a thousand good ideas.","Steve Jobs"],
-  ["A goal without a plan is just a wish.","Antoine de Saint-Exupery"],
-  ["Begin where you are. Use what you have. Do what you can.","Arthur Ashe"],
-  ["Done is better than perfect.","unknown"]
-];
-const REFLECTION_FEED = 'https://www.ignatianspirituality.com/feed/';
-function localQuote(){
-  const start=new Date(new Date().getFullYear(),0,0);
-  const day=Math.floor((new Date()-start)/86400000);
-  const q=QUOTES[day % QUOTES.length];
-  document.getElementById('quote').innerHTML=`"${escapeHtml(q[0])}"<span class="who">${escapeHtml(q[1])}</span>`;
-}
-async function loadReflection(){
-  localQuote(); // immediate offline fallback
+/* ---------- GitHub issues (newest open, via serve.py /issues) ---------- */
+async function loadIssues(){
+  const list = document.getElementById('issueList');
+  list.innerHTML = '<li class="small">Loading...</li>';
   try {
-    // Fetched through serve.py (/feed), since feeds send no CORS headers.
-    const res = await fetch('/feed?url=' + encodeURIComponent(REFLECTION_FEED));
-    if(!res.ok) return;
-    const xml = new DOMParser().parseFromString((await res.text()).trim(), 'text/xml');
-    const item = xml.querySelector('item');
-    if(!item) return;
-    const title = (item.querySelector('title')?.textContent || '').trim();
-    const link = (item.querySelector('link')?.textContent || '#').trim();
-    let desc = (item.querySelector('description')?.textContent || '').replace(/<[^>]*>/g,'').trim();
-    if(desc.length > 180) desc = desc.slice(0,180).replace(/\s+\S*$/,'') + '...';
-    document.getElementById('quote').innerHTML =
-      (desc ? `${escapeHtml(desc)}` : `${escapeHtml(title)}`) +
-      `<span class="who"><a href="${escapeHtml(safeUrl(link))}" target="_blank" style="color:inherit">Read: ${escapeHtml(title)}</a> - Ignatian Spirituality (Loyola Press)</span>`;
-  } catch(e){ /* keep local quote */ }
+    const res = await fetch('/issues');
+    if(!res.ok) throw new Error('issues ' + res.status);
+    const items = (await res.json()).items;
+    if(!items.length){ list.innerHTML = '<li class="small">No open issues.</li>'; return; }
+    list.innerHTML = '';
+    items.forEach(it => {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="${escapeHtml(safeUrl(it.url))}" target="_blank">${escapeHtml(it.title)}</a>` +
+        `<div class="meta">${escapeHtml(it.repo)} #${it.number} - ${new Date(it.created).toLocaleDateString()}</div>`;
+      list.appendChild(li);
+    });
+  } catch(e){
+    list.innerHTML = '<li class="small">Could not load issues. Is serve.py running and gh logged in?</li>';
+  }
 }
-loadReflection();
+loadIssues();
 
 /* ---------- Creighton RSS ---------- */
 function saveRSS(){ LS.set('rssUrl', document.getElementById('rssUrl').value.trim()); loadRSS(); }
