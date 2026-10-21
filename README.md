@@ -343,3 +343,12 @@ leak your username and directory layout to everyone reading a public repo.
 ---
 
 *"Slow is smooth, and smooth is fast."*
+
+## Dock launcher
+
+`~/Applications/StartHere.app` (built 2026-10-21) runs the `starthere` zsh function from `~/.zshrc`. Rebuild if lost:
+
+```bash
+echo 'do shell script "/bin/zsh -ic '"'"'starthere'"'"' >/dev/null 2>&1 &"' > /tmp/starthere.applescript
+osacompile -o ~/Applications/StartHere.app /tmp/starthere.applescript
+```
