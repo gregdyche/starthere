@@ -149,7 +149,29 @@
   /* This Week: capped at about a third of the screen, scrolls past that */
   .week { max-height: 33vh; overflow-y: auto; }
   body.cleared .preflight { border-top-color: var(--blue); }
-  .preflight h2 { font-size: 1.05rem; }
+  .preflight h2 { font-size: .95rem; margin-bottom: 8px; }
+  /* column one: Preflight on top, GitHub Issues under it */
+  .stack { display: grid; gap: 18px; align-content: start; }
+  .preflight .ribbon { margin: 2px 0 8px; }
+  .preflight .check-add { margin-top: 6px; }
+  .preflight .check-add input { font-size: .8rem; padding: 4px 8px; }
+  .preflight .check-add .btn { padding: 4px 10px; font-size: .8rem; }
+  /* By Day: static schedule of which checklist runs when */
+  .byday h3 {
+    margin: 12px 0 4px; font-family: var(--display); font-size: .8rem;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600;
+  }
+  .byday h3:first-of-type { margin-top: 0; }
+  .byday h3.today { color: var(--gold-deep); }
+  .byday ul { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
+  .byday li { padding: 4px 0 4px 10px; border-left: 2px solid var(--line); }
+  .byday h3.today + ul li { border-left-color: var(--gold-deep); }
+  .byday button {
+    background: none; border: none; padding: 0; font: inherit; color: var(--blue);
+    cursor: pointer; text-align: left; font-weight: 600;
+  }
+  .byday button:hover { text-decoration: underline; }
+  .byday .small { display: block; }
   .preflight h2 .badge {
     font-size: .68rem; letter-spacing: 2px; padding: 3px 10px;
     border-radius: 3px; background: var(--gold); color: var(--navy);
@@ -167,15 +189,15 @@
   body.cleared .ribbon i.on { background: var(--blue); }
 
   .preflight .check-item {
-    padding: 10px 0 10px 12px;
+    padding: 5px 0 5px 10px;
     border-left: 3px solid var(--gold-deep);
-    margin: 4px 0;
+    margin: 2px 0;
     border-bottom: none;
     background: linear-gradient(90deg, rgba(242,199,92,.12), transparent 40%);
     border-radius: 0 6px 6px 0;
   }
   .preflight .check-item.done { border-left-color: var(--line); background: none; }
-  .preflight .check-item label { font-size: 1rem; }
+  .preflight .check-item label { font-size: .92rem; }
 
   /* ---------- Checklists (shared) ---------- */
   .check-item {
@@ -261,6 +283,7 @@
     .wrap { grid-template-columns: 1fr; }
     .span2 { grid-column: span 1; }
     .cl-card { grid-row: auto; }
+    .stack { display: contents; }
     .flag h1 { font-size: 1.3rem; letter-spacing: 3px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -303,6 +326,9 @@
     <div class="small" style="margin-top:8px">Click a title to open it on GitHub (last pushed version, with copy buttons); Sublime opens the file on this Mac to edit. Used one and something was missing? Fix the checklist now, before you close it. Not listed? Add it to CHECKLISTS.md in the Stacks.</div>
   </section>
 
+  <!-- COLUMN ONE: Preflight (short) with GitHub Issues under it -->
+  <div class="stack">
+
   <!-- PREFLIGHT CHECKLIST — the reason the page exists -->
   <section class="card preflight">
     <h2>Preflight Checklist
@@ -321,6 +347,48 @@
   <section class="card">
     <h2>GitHub Issues <button class="iconbtn" onclick="loadIssues()">Refresh</button></h2>
     <ul id="issueList"><li class="small">Loading...</li></ul>
+  </section>
+
+  </div>
+
+  <!-- BY DAY: static schedule of which checklist runs when. Edit here when
+       CHECKLISTS.md changes. Clicking an entry runs the Checklists search. -->
+  <section class="card byday">
+    <h2>By Day <span class="reset-note">which checklist runs when</span></h2>
+    <h3 data-day="1">Monday</h3>
+    <ul>
+      <li><button onclick="clFind('MBA 779 weekly operations')">MBA 779 weekly operations</button><span class="small">Open the week: module visible, download last week's lab log CSV</span></li>
+      <li><button onclick="clFind('lab log review')">MBA 779 lab log review</button><span class="small">Monday or Tuesday, in ferpa or a plain terminal</span></li>
+    </ul>
+    <h3 data-day="2">Tuesday</h3>
+    <ul>
+      <li><button onclick="clFind('lab log review')">MBA 779 lab log review</button><span class="small">If not done Monday; grades posted by Tuesday night</span></li>
+      <li><button onclick="clFind('Grading session')">Grading session</button><span class="small">Before grading the two AI Builds and participation (ops step 3)</span></li>
+      <li><button onclick="clFind('MBA 779 weekly operations')">Module announcement</button><span class="small">Tuesday or Wednesday (ops step 4)</span></li>
+    </ul>
+    <h3 data-day="3">Wednesday</h3>
+    <ul>
+      <li><button onclick="clFind('MBA 779 weekly operations')">Module announcement</button><span class="small">If not posted Tuesday</span></li>
+    </ul>
+    <h3 data-day="4">Thursday</h3>
+    <ul>
+      <li><button onclick="clFind('MBA 779 weekly operations')">Who is missing</button><span class="small">Gradebook glance, one Inbox message each (ops step 6)</span></li>
+    </ul>
+    <h3 data-day="5">Friday</h3>
+    <ul>
+      <li><button onclick="clFind('MBA 779 weekly operations')">Who is missing</button><span class="small">If not done Thursday; late work closes 5 days after due</span></li>
+    </ul>
+    <h3>Weekly</h3>
+    <ul>
+      <li><button onclick="clFind('Grading session')">Grading session</button><span class="small">BIA253 grading pass, any day it happens</span></li>
+      <li><button onclick="clFind('Feed the corpus')">Feed the corpus</button><span class="small">When the brief shows the every-3-days task</span></li>
+      <li><button onclick="clFind('Corpus sync')">Corpus sync</button><span class="small">After any edit under coach/corpus, before calling it done</span></li>
+    </ul>
+    <h3>Monthly</h3>
+    <ul>
+      <li><button onclick="clFind('')">Stale checklist review</button><span class="small">Clear every "need a look" flag in the Checklists card</span></li>
+      <li><button onclick="clFind('Semester prep')">Term calendar check</button><span class="small">Semester prep starts six weeks before each term; rollover at term start</span></li>
+    </ul>
   </section>
 
   <!-- CREIGHTON RSS -->
@@ -614,6 +682,8 @@ async function clOpen(id){
   try { await fetch('/checklists/open', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) }); }
   catch(e){}
 }
+function clFind(q){ const i=document.getElementById('clQuery'); i.value=q; loadChecklists(); i.focus(); }
+(function(){ const d=new Date().getDay(); const h=document.querySelector(`.byday h3[data-day="${d}"]`); if(h) h.classList.add('today'); })();
 function clOpenTop(){ const t = CL_ITEMS.find(i=>i.exists); if(!t) return; if(t.github_url) window.open(safeUrl(t.github_url), '_blank', 'noopener'); else clOpen(t.id); }
 loadChecklists();
 

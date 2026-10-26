@@ -32,13 +32,14 @@ Set it as your browser homepage or pin the tab.
 
 | Card | What it does |
 | --- | --- |
-| **Preflight Checklist** | The daily non-negotiables. The list lives in `checklist.json` (git-tracked); checkmarks live in the browser and clear each morning. See [The checklist is code](#the-checklist-is-code). |
+| **Preflight Checklist** | The daily non-negotiables, kept short so GitHub Issues fits under it. The list lives in `checklist.json` (git-tracked); checkmarks live in the browser and clear each morning. See [The checklist is code](#the-checklist-is-code). |
 | **Checklists** | Search box over every checklist you operate from, wherever it lives, with stale ones flagged. Reads a private index in another repo; nothing is stored here. See [Checklists card](#checklists-card). |
 | **Today's daily brief** (small link above Checklists) | Opens `/brief`: `serve.py` reads `~/daily-brief.md` (override with `BRIEF_PATH`) on each request and renders it as HTML (marked, from jsdelivr). The brief never enters this repo. Needs `serve.py`. |
 | **CRM briefing** (next to the daily brief link) | Opens `/crm`: the newest `CRM_Briefing_YYYY-MM-DD.md` in `~/Documents/Claude/Projects/My CRM` (override with `CRM_DIR`), picked by the date in the filename on each request, rendered the same way. Needs `serve.py`. |
 | **Inbox** (next to the CRM briefing link) | Opens `/inbox`: `~/Documents/Claude/brief/INBOX.md` (override with `INBOX_PATH`), the one queue every capture channel writes to (email forwards, voice memos, dropped files), rendered the same way. The design is in `INTAKE.md` beside it. The preflight item "Inbox triaged" is the habit that keeps it short. Needs `serve.py`. |
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
+| **By Day** | Static schedule of which checklist runs on which weekday, then Weekly and Monthly. Today's heading is marked in gold. Clicking an entry runs the Checklists search for it. Edit the list in `STARTHERE.html` whenever `CHECKLISTS.md` in the Stacks changes; it is not generated. |
 | **GitHub Issues** | The 10 newest open issues across your repos, newest first. `serve.py` runs `gh` (the GitHub CLI, already logged in) and hands the page only titles and links. Needs `serve.py` and `gh`. |
 | **Creighton Feed** | Campus news via RSS. |
 
