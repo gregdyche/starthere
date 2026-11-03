@@ -40,7 +40,7 @@ Set it as your browser homepage or pin the tab.
 | **Kill proc** (banner button) | Stops the local `serve.py` server. Only shown when served from localhost. |
 | **This Week** | Read-only. Projects flagged `this_week` in [Tortoise Watch](https://app.tortoiseplanner.com/), from a local snapshot file. Sized to its content and capped at a third of the screen (scrolls past that). See [Tortoise Watch sync](#tortoise-watch-sync). |
 | **By Day** | Static schedule of which checklist runs on which weekday, then Weekly and Monthly. Today's heading is marked in gold. Clicking an entry runs the Checklists search for it. Edit the list in `STARTHERE.html` whenever `CHECKLISTS.md` in the Stacks changes; it is not generated. |
-| **GitHub Issues** | The 10 newest open issues across your repos, newest first. `serve.py` runs `gh` (the GitHub CLI, already logged in) and hands the page only titles and links. Needs `serve.py` and `gh`. |
+| **GitHub Issues** | The 10 newest open issues across your repos, newest first. `serve.py` runs `gh` (the GitHub CLI, already logged in) and hands the page only titles and links. Needs `serve.py` and `gh`. `serve.py` adds `/opt/homebrew/bin` to its own PATH, so it finds `gh` even when started from a non-login shell (IDE terminal, `zsh -c`); if the card says "Could not load issues", check `gh auth status` and `curl localhost:8000/issues`. |
 | **Creighton Feed** | Campus news via RSS. |
 
 ---

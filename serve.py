@@ -42,6 +42,13 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+# `gh` lives in Homebrew's bin, which only login shells put on PATH (via
+# ~/.zprofile). When the server is started from an IDE terminal or `zsh -c`,
+# that dir is missing and the Issues card fails, so add it here.
+for _d in ("/opt/homebrew/bin", "/usr/local/bin"):
+    if os.path.isdir(_d) and _d not in os.environ.get("PATH", "").split(os.pathsep):
+        os.environ["PATH"] = _d + os.pathsep + os.environ.get("PATH", "")
+
 PORT = 8000
 LOCAL_HOSTS = {f"localhost:{PORT}", f"127.0.0.1:{PORT}"}
 LOCAL_ORIGINS = {f"http://{h}" for h in LOCAL_HOSTS}
