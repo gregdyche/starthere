@@ -352,9 +352,22 @@
   </div>
 
   <!-- BY DAY: static schedule of which checklist runs when. Edit here when
-       CHECKLISTS.md changes. Clicking an entry runs the Checklists search. -->
+       CHECKLISTS.md changes. Clicking an entry runs the Checklists search.
+       Order (Greg, 2026-11-07): Monthly, Weekly, then Monday to Sunday, so the
+       long-term ones are not forgotten under the day's list. -->
   <section class="card byday">
     <h2>By Day <span class="reset-note">which checklist runs when</span></h2>
+    <h3>Monthly</h3>
+    <ul>
+      <li><button onclick="clFind('')">Stale checklist review</button><span class="small">Clear every "need a look" flag in the Checklists card</span></li>
+      <li><button onclick="clFind('Semester prep')">Term calendar check</button><span class="small">Semester prep starts six weeks before each term; rollover at term start</span></li>
+    </ul>
+    <h3>Weekly</h3>
+    <ul>
+      <li><button onclick="clFind('Grading session')">Grading session</button><span class="small">BIA253 grading pass, any day it happens</span></li>
+      <li><button onclick="clFind('Feed the corpus')">Feed the corpus</button><span class="small">When the brief shows the every-3-days task</span></li>
+      <li><button onclick="clFind('Corpus sync')">Corpus sync</button><span class="small">After any edit under coach/corpus, before calling it done</span></li>
+    </ul>
     <h3 data-day="1">Monday</h3>
     <ul>
       <li><button onclick="clFind('Class prep')">Reading quiz check (class prep step 2)</button><span class="small">Harvest last week's chapter quiz item analysis; any question missed by about 30% or more goes into this week's deck</span></li>
@@ -387,20 +400,18 @@
     </ul>
     <h3 data-day="5">Friday</h3>
     <ul>
+      <li><button onclick="clFind('Class prep')">Teaching prep for next week</button><span class="small">Record the commentary memos on next week's material first (class prep step 1c), then the deck</span></li>
       <li><button onclick="clFind('MBA 779 weekly operations')">Who is missing</button><span class="small">If not done Thursday; late work closes 5 days after due</span></li>
       <li><button onclick="clFind('Feed the corpus')">Feed the corpus</button><span class="small">If the brief shows the every-3-days task</span></li>
       <li><button onclick="clFind('Corpus sync')">Corpus sync</button><span class="small">If you edited anything under coach/corpus, before calling it done</span></li>
     </ul>
-    <h3>Weekly</h3>
+    <h3 data-day="6">Saturday</h3>
     <ul>
-      <li><button onclick="clFind('Grading session')">Grading session</button><span class="small">BIA253 grading pass, any day it happens</span></li>
-      <li><button onclick="clFind('Feed the corpus')">Feed the corpus</button><span class="small">When the brief shows the every-3-days task</span></li>
-      <li><button onclick="clFind('Corpus sync')">Corpus sync</button><span class="small">After any edit under coach/corpus, before calling it done</span></li>
+      <li><span class="small">Nothing scheduled</span></li>
     </ul>
-    <h3>Monthly</h3>
+    <h3 data-day="0">Sunday</h3>
     <ul>
-      <li><button onclick="clFind('')">Stale checklist review</button><span class="small">Clear every "need a look" flag in the Checklists card</span></li>
-      <li><button onclick="clFind('Semester prep')">Term calendar check</button><span class="small">Semester prep starts six weeks before each term; rollover at term start</span></li>
+      <li><span class="small">Nothing scheduled</span></li>
     </ul>
   </section>
 
