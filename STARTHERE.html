@@ -365,7 +365,8 @@
     <h3>Weekly</h3>
     <ul>
       <li><button onclick="clFind('Outreach')">Work outreach</button><span class="small">Say "work outreach" in Claude Code; it only runs when asked. Replies owed first, then new asks. Drafts land in Gmail, you send</span></li>
-      <li><button onclick="clFind('Prospect tip sheet')">Prospect tip sheet</button><span class="small">Say "prospect tip sheet" in Claude Code; it only runs when asked. Reads the week's Google Alerts for EoC contacts and AI training prospects, files the people, then tells you which are worth writing to and offers the drafts. EoC names go to the CRM only, never a draft</span></li>
+      <li><button onclick="clFind('Prospect tip sheet')">Prospect tip sheet</button><span class="small">Say "prospect tip sheet" in Claude Code; it only runs when asked. Reads the week's Google Alerts for CP training prospects, files the people, then tells you which are worth writing to and offers the drafts</span></li>
+      <li><button onclick="clFind('EoC update')">EoC update</button><span class="small">Say "eoc update" in Claude Code; it only runs when asked. Reads the week's EoC Google Alerts, files the people in the CRM and for the map, then asks your go on each pin. Never a draft. Listed on Saturday</span></li>
       <li><button onclick="clFind('Grading session')">Grading session</button><span class="small">BIA253 grading pass, any day it happens</span></li>
       <li><button onclick="clFind('Feed the corpus')">Feed the corpus</button><span class="small">When the brief shows the every-3-days task</span></li>
       <li><button onclick="clFind('Corpus sync')">Corpus sync</button><span class="small">After any edit under coach/corpus, before calling it done</span></li>
@@ -409,11 +410,11 @@
     </ul>
     <h3 data-day="6">Saturday</h3>
     <ul>
-      <li><span class="small">Nothing scheduled</span></li>
+      <li><button onclick="clFind('EoC update')">EoC update</button><span class="small">Say "eoc update" in Claude Code. Claude reads the week's EoC alerts, files the people, and asks your go on each map pin</span></li>
     </ul>
     <h3 data-day="0">Sunday</h3>
     <ul>
-      <li><span class="small">Nothing scheduled</span></li>
+      <li><button onclick="clFind('EoC update')">EoC update</button><span class="small">If not done Saturday</span></li>
     </ul>
   </section>
 
